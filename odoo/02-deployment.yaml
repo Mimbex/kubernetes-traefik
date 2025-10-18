@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odoo
+  namespace: odoo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: odoo
+  template:
+    metadata:
+      labels:
+        app: odoo
+    spec:
+      containers:
+        - name: odoo
+          image: odoo:19.0
+          ports:
+            - containerPort: 8069
+              name: http
+            - containerPort: 8072
+              name: websocket
+          env:
+            - name: HOST
+              value: postgresql.postgresql.svc.cluster.local
+            - name: USER
+              value: odoo
+            - name: PASSWORD
+              value: odoo
+          volumeMounts:
+            - name: odoo-data
+              mountPath: /var/lib/odoo
+            - name: odoo-config
+              mountPath: /etc/odoo
+            - name: extra-addons
+              mountPath: /mnt/extra-addons
+          livenessProbe:
+            httpGet:
+              path: /web/health
+              port: 8069
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /web/health
+              port: 8069
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: odoo-config
+          configMap:
+            name: odoo-config
+        - name: odoo-data
+          persistentVolumeClaim:
+            claimName: odoo-data
+        - name: extra-addons
+          persistentVolumeClaim:
+            claimName: odoo-extra-addons
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: odoo-data
+  namespace: odoo
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: odoo-extra-addons
+  namespace: odoo
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi

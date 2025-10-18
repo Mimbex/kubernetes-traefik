@@ -1,0 +1,56 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Centralized configuration
+namespace: default
+
+# Apply all manifests
+resources:
+  - traefik/00-namespace.yaml
+  - traefik/01-rbac.yaml
+  - traefik/02-deployment.yaml
+  - traefik/03-service.yaml
+  - postgresql/00-namespace.yaml
+  - postgresql/01-secret.yaml
+  - postgresql/02-statefulset.yaml
+  - odoo/00-namespace.yaml
+  - odoo/01-configmap.yaml
+  - odoo/02-deployment.yaml
+  - odoo/03-service.yaml
+  - odoo/04-ingress.yaml
+
+# Centralized variables
+configMapGenerator:
+  - name: global-config
+    literals:
+      - ODOO_DOMAIN=odoo.yourdomain.com
+      - TRAEFIK_DOMAIN=traefik.yourdomain.com
+      - LETSENCRYPT_EMAIL=your-email@example.com
+
+# Replace variables in all files
+replacements:
+  - source:
+      kind: ConfigMap
+      name: global-config
+      fieldPath: data.ODOO_DOMAIN
+    targets:
+      - select:
+          kind: Ingress
+          name: odoo-ingress
+        fieldPaths:
+          - spec.rules.0.host
+          - spec.tls.0.hosts.0
+  
+  - source:
+      kind: ConfigMap
+      name: global-config
+      fieldPath: data.LETSENCRYPT_EMAIL
+    targets:
+      - select:
+          kind: Deployment
+          name: traefik
+        fieldPaths:
+          - spec.template.spec.containers.0.args.4
+        options:
+          delimiter: '='
+          index: 1

@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik
+  namespace: traefik
+  labels:
+    app: traefik
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik
+  template:
+    metadata:
+      labels:
+        app: traefik
+    spec:
+      serviceAccountName: traefik
+      containers:
+        - name: traefik
+          image: traefik:v2.10
+          args:
+            - --api.insecure=true
+            - --providers.kubernetesingress=true
+            - --entrypoints.web.address=:80
+            - --entrypoints.websecure.address=:443
+            - --certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}
+            - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+            - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+          ports:
+            - name: web
+              containerPort: 80
+            - name: websecure
+              containerPort: 443
+            - name: admin
+              containerPort: 8080
+          volumeMounts:
+            - name: letsencrypt
+              mountPath: /letsencrypt
+      volumes:
+        - name: letsencrypt
+          persistentVolumeClaim:
+            claimName: traefik-letsencrypt
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: traefik-letsencrypt
+  namespace: traefik
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: odoo-config
+  namespace: odoo
+data:
+  odoo.conf: |
+    [options]
+    admin_passwd = odooPassword
+    db_host = postgresql.postgresql.svc.cluster.local
+    db_port = 5432
+    db_user = odoo
+    db_password = odoo
+    addons_path = /mnt/extra-addons
+    data_dir = /var/lib/odoo
+    proxy_mode = True
+    workers = 2
+    max_cron_threads = 1

@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: odoo-backup
+  namespace: backups
+spec:
+  # Run daily at 2:00 AM
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: postgres:17
+              env:
+                - name: POSTGRES_PASSWORD
+                  value: "odoo"  # Should match your PostgreSQL password
+              command:
+                - /bin/bash
+                - /scripts/backup.sh
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backups
+                - name: backup-script
+                  mountPath: /scripts
+                - name: odoo-data
+                  mountPath: /odoo-data
+                  readOnly: true
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: backup-storage
+            - name: backup-script
+              configMap:
+                name: backup-script
+                defaultMode: 0755
+            - name: odoo-data
+              persistentVolumeClaim:
+                claimName: odoo-data

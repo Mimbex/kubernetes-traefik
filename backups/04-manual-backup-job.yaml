@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: odoo-manual-backup
+  namespace: backups
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: backup
+          image: postgres:17
+          env:
+            - name: POSTGRES_PASSWORD
+              value: "odoo"  # Should match your PostgreSQL password
+          command:
+            - /bin/bash
+            - /scripts/backup.sh
+          volumeMounts:
+            - name: backup-storage
+              mountPath: /backups
+            - name: backup-script
+              mountPath: /scripts
+      volumes:
+        - name: backup-storage
+          persistentVolumeClaim:
+            claimName: backup-storage
+        - name: backup-script
+          configMap:
+            name: backup-script
+            defaultMode: 0755
