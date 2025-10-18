@@ -116,10 +116,14 @@ SERVER_IP=$(hostname -I | awk '{print $1}')
 echo "   🌐 Dashboard URL:"
 echo "   https://$SERVER_IP:$NODEPORT"
 echo ""
-echo "   🔑 Get access token:"
-echo "   kubectl -n kubernetes-dashboard create token admin-user"
+echo "   🔑 Access Token:"
+echo ""
+TOKEN=$(su - $ACTUAL_USER -c "kubectl -n kubernetes-dashboard create token admin-user")
+echo "   $TOKEN"
 echo ""
 echo "   ⚠️  Accept security warning in browser (self-signed certificate)"
+echo ""
+echo "   📋 Copy the token above and paste it in the dashboard login"
 echo ""
 
 echo "=========================================="
