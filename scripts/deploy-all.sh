@@ -10,12 +10,19 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-export $(cat .env | grep -v '^#' | xargs)
+set -a
+source .env
+set +a
 
 echo "📋 Configuration:"
 echo "   Odoo Domain: $ODOO_DOMAIN"
 echo "   Let's Encrypt Email: $LETSENCRYPT_EMAIL"
 echo ""
+
+# Create PersistentVolumes
+echo "📦 Creating storage..."
+kubectl apply -f traefik/01-pv.yaml 2>/dev/null || true
+kubectl apply -f postgresql/01-storageclass.yaml 2>/dev/null || true
 
 # Deploy Traefik
 echo "📦 Deploying Traefik..."
