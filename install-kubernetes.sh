@@ -58,9 +58,29 @@ install_ubuntu() {
     swapoff -a
     sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
     
+    # Load kernel modules
+    echo ""
+    echo "4️⃣ Loading kernel modules..."
+    modprobe overlay
+    modprobe br_netfilter
+    
+    cat <<EOF | tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
+EOF
+    
+    # Configure sysctl
+    cat <<EOF | tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
+EOF
+    
+    sysctl --system > /dev/null 2>&1
+    
     # Install containerd
     echo ""
-    echo "4️⃣ Installing containerd..."
+    echo "5️⃣ Installing containerd..."
     apt-get install -y containerd
     mkdir -p /etc/containerd
     containerd config default | tee /etc/containerd/config.toml
@@ -69,7 +89,7 @@ install_ubuntu() {
     
     # Install kubeadm, kubelet, kubectl
     echo ""
-    echo "5️⃣ Installing Kubernetes components..."
+    echo "6️⃣ Installing Kubernetes components..."
     curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
     echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
     apt-get update
@@ -103,15 +123,35 @@ install_centos() {
     swapoff -a
     sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
     
+    # Load kernel modules
+    echo ""
+    echo "4️⃣ Loading kernel modules..."
+    modprobe overlay
+    modprobe br_netfilter
+    
+    cat <<EOF | tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
+EOF
+    
+    # Configure sysctl
+    cat <<EOF | tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
+EOF
+    
+    sysctl --system > /dev/null 2>&1
+    
     # Disable SELinux
     echo ""
-    echo "4️⃣ Configuring SELinux..."
+    echo "5️⃣ Configuring SELinux..."
     setenforce 0
     sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
     
     # Install containerd
     echo ""
-    echo "5️⃣ Installing containerd..."
+    echo "6️⃣ Installing containerd..."
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     yum install -y containerd.io
     mkdir -p /etc/containerd
@@ -121,7 +161,7 @@ install_centos() {
     
     # Install kubeadm, kubelet, kubectl
     echo ""
-    echo "6️⃣ Installing Kubernetes components..."
+    echo "7️⃣ Installing Kubernetes components..."
     cat <<EOF | tee /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
