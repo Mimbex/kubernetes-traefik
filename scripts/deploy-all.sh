@@ -37,6 +37,7 @@ kubectl apply -f https://raw.githubusercontent.com/traefik/traefik/v2.10/docs/co
 kubectl apply -f traefik/01-rbac.yaml
 envsubst < traefik/02-deployment.yaml | kubectl apply -f -
 kubectl apply -f traefik/03-service.yaml
+kubectl apply -f traefik/04-ingressclass.yaml
 
 # Wait for Traefik
 echo "⏳ Waiting for Traefik to be ready..."
