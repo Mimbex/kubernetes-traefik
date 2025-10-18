@@ -5,7 +5,7 @@ metadata:
   namespace: odoo
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
-    traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
+    cert-manager.io/cluster-issuer: letsencrypt
 spec:
   ingressClassName: traefik
   rules:
@@ -19,25 +19,7 @@ spec:
                 name: odoo
                 port:
                   number: 8069
-          - path: /websocket
-            pathType: Prefix
-            backend:
-              service:
-                name: odoo
-                port:
-                  number: 8072
   tls:
     - hosts:
         - ${ODOO_DOMAIN}
       secretName: odoo-tls
-
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: redirect-https
-  namespace: odoo
-spec:
-  redirectScheme:
-    scheme: https
-    permanent: true
