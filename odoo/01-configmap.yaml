@@ -14,5 +14,5 @@ data:
     addons_path = /mnt/extra-addons
     data_dir = /var/lib/odoo
     proxy_mode = True
-    workers = 2
+    workers = 0
     max_cron_threads = 1
