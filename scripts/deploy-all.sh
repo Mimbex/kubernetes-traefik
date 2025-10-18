@@ -29,6 +29,11 @@ kubectl apply -f odoo/00-pv.yaml 2>/dev/null || true
 # Deploy Traefik
 echo "📦 Deploying Traefik..."
 kubectl apply -f traefik/00-namespace.yaml
+
+# Install Traefik CRDs
+echo "📦 Installing Traefik CRDs..."
+kubectl apply -f https://raw.githubusercontent.com/traefik/traefik/v2.10/docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml
+
 kubectl apply -f traefik/01-rbac.yaml
 envsubst < traefik/02-deployment.yaml | kubectl apply -f -
 kubectl apply -f traefik/03-service.yaml
