@@ -13,15 +13,9 @@ spec:
       labels:
         app: odoo
     spec:
-      securityContext:
-        fsGroup: 101
-        runAsUser: 101
-        runAsGroup: 101
       containers:
         - name: odoo
           image: odoo:19.0
-          securityContext:
-            allowPrivilegeEscalation: false
           ports:
             - containerPort: 8069
               name: http
@@ -42,16 +36,14 @@ spec:
             - name: extra-addons
               mountPath: /mnt/extra-addons
           livenessProbe:
-            httpGet:
-              path: /web/health
+            tcpSocket:
               port: 8069
-            initialDelaySeconds: 60
+            initialDelaySeconds: 120
             periodSeconds: 30
           readinessProbe:
-            httpGet:
-              path: /web/health
+            tcpSocket:
               port: 8069
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
       volumes:
         - name: odoo-config
