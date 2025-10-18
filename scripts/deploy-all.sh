@@ -21,8 +21,10 @@ echo ""
 
 # Create PersistentVolumes
 echo "📦 Creating storage..."
-kubectl apply -f traefik/01-pv.yaml 2>/dev/null || true
 kubectl apply -f postgresql/01-storageclass.yaml 2>/dev/null || true
+kubectl apply -f traefik/01-pv.yaml 2>/dev/null || true
+kubectl apply -f postgresql/00-pv.yaml 2>/dev/null || true
+kubectl apply -f odoo/00-pv.yaml 2>/dev/null || true
 
 # Deploy Traefik
 echo "📦 Deploying Traefik..."
