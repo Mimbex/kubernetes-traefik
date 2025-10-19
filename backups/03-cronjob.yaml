@@ -39,5 +39,6 @@ spec:
                 name: backup-script
                 defaultMode: 0755
             - name: odoo-data
-              persistentVolumeClaim:
-                claimName: odoo-data
+              hostPath:
+                path: /opt/odoo-data
+                type: Directory
