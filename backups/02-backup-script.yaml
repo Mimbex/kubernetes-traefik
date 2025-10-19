@@ -79,7 +79,7 @@ data:
     
     # Create backup manifest
     echo "📝 Creating backup manifest..."
-    cat > ${BACKUP_DIR}/${TIMESTAMP}/manifest.txt <<EOF
+    cat > ${BACKUP_DIR}/${TIMESTAMP}/manifest.txt << 'MANIFEST_EOF'
 Backup Date: $(date)
 Timestamp: ${TIMESTAMP}
 Databases: $(echo $DATABASES | wc -w) Odoo database(s)
@@ -87,7 +87,7 @@ Database Names: ${DATABASES}
 Filestore Size: ${FS_SIZE:-N/A}
 Odoo Version: 19.0
 PostgreSQL Version: 17
-EOF
+MANIFEST_EOF
     
     # Compress complete backup
     echo "📦 Compressing complete backup..."
