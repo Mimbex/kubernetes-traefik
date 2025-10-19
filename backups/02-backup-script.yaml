@@ -21,11 +21,8 @@ data:
     echo "🔄 Starting COMPLETE backup at $(date)"
     echo "================================================"
     
-    # Create backup directory
-    mkdir -p ${BACKUP_DIR}/${TIMESTAMP}
-    
     # 1. Backup all Odoo databases individually
-    echo "📦 [1/2] Backing up Odoo databases..."
+    echo "📦 [1/1] Backing up Odoo databases..."
     
     # Get list of Odoo databases (exclude postgres, template0, template1)
     DATABASES=$(PGPASSWORD=${POSTGRES_PASSWORD} psql \
