@@ -25,7 +25,7 @@ data:
     mkdir -p ${BACKUP_DIR}/${TIMESTAMP}
     
     # 1. Backup all Odoo databases individually
-    echo "📦 [1/3] Backing up Odoo databases..."
+    echo "📦 [1/2] Backing up Odoo databases..."
     
     # Get list of Odoo databases (exclude postgres, template0, template1)
     DATABASES=$(PGPASSWORD=${POSTGRES_PASSWORD} psql \
@@ -38,43 +38,44 @@ data:
     if [ -z "$DATABASES" ]; then
         echo "   ⚠️  No Odoo databases found to backup"
     else
-        mkdir -p ${BACKUP_DIR}/${TIMESTAMP}/databases
         for DB in $DATABASES; do
             DB_CLEAN=$(echo $DB | xargs)  # Remove whitespace
             echo "   📦 Backing up database: ${DB_CLEAN}..."
+            
+            # Create directory for this database
+            mkdir -p ${BACKUP_DIR}/${TIMESTAMP}/${DB_CLEAN}
+            
+            # Backup database
             PGPASSWORD=${POSTGRES_PASSWORD} pg_dump \
               -h ${DB_HOST} \
               -p ${DB_PORT} \
               -U ${DB_USER} \
               -d ${DB_CLEAN} \
               -F c \
-              -f ${BACKUP_DIR}/${TIMESTAMP}/databases/${DB_CLEAN}.dump
+              -f ${BACKUP_DIR}/${TIMESTAMP}/${DB_CLEAN}/database.dump
             
-            DB_SIZE=$(du -h ${BACKUP_DIR}/${TIMESTAMP}/databases/${DB_CLEAN}.dump | cut -f1)
+            DB_SIZE=$(du -h ${BACKUP_DIR}/${TIMESTAMP}/${DB_CLEAN}/database.dump | cut -f1)
             echo "      ✅ ${DB_CLEAN}: ${DB_SIZE}"
+            
+            # Backup filestore for this database (if exists)
+            if [ -d "${ODOO_DATA_DIR}/filestore/${DB_CLEAN}" ]; then
+                echo "      📁 Backing up filestore for ${DB_CLEAN}..."
+                tar -czf ${BACKUP_DIR}/${TIMESTAMP}/${DB_CLEAN}/filestore.tar.gz \
+                  -C ${ODOO_DATA_DIR}/filestore ${DB_CLEAN}/
+                FS_SIZE=$(du -h ${BACKUP_DIR}/${TIMESTAMP}/${DB_CLEAN}/filestore.tar.gz | cut -f1)
+                echo "         ✅ Filestore: ${FS_SIZE}"
+            fi
         done
     fi
     
-    # 2. Backup Odoo filestore (if exists)
-    if [ -d "${ODOO_DATA_DIR}/filestore" ]; then
-        echo "📁 [2/3] Backing up Odoo filestore..."
-        tar -czf ${BACKUP_DIR}/${TIMESTAMP}/filestore.tar.gz \
-          -C ${ODOO_DATA_DIR} filestore/
-        
-        FS_SIZE=$(du -h ${BACKUP_DIR}/${TIMESTAMP}/filestore.tar.gz | cut -f1)
-        echo "   ✅ Filestore backup: ${FS_SIZE}"
-    else
-        echo "⚠️  [2/3] Odoo filestore not found, skipping..."
-    fi
-    
-    # 3. Backup Odoo sessions (optional)
+    # 2. Backup Odoo sessions (optional)
     if [ -d "${ODOO_DATA_DIR}/sessions" ]; then
-        echo "💾 [3/3] Backing up Odoo sessions..."
+        echo "💾 [2/2] Backing up Odoo sessions..."
         tar -czf ${BACKUP_DIR}/${TIMESTAMP}/sessions.tar.gz \
           -C ${ODOO_DATA_DIR} sessions/
         echo "   ✅ Sessions backup completed"
     else
-        echo "ℹ️  [3/3] Sessions not found, skipping..."
+        echo "ℹ️  [2/2] Sessions not found, skipping..."
     fi
     
     # Create backup manifest
@@ -98,7 +99,7 @@ data:
     echo ""
     echo "✅ COMPLETE backup finished: ${TIMESTAMP}_complete.tar.gz"
     echo "   Total size: ${TOTAL_SIZE}"
-    echo "   Contents: Individual Databases + Filestore + Sessions + Manifest"
+    echo "   Contents: Databases (with individual filestores) + Sessions + Manifest"
     
     # Clean old backups
     echo ""

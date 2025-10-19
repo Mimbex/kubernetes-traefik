@@ -25,9 +25,9 @@ kubectl get pv 2>/dev/null | grep Released | awk '{print $1}' | xargs -r kubectl
 
 # Create host directories with correct permissions
 echo "📁 Creating host directories..."
-sudo mkdir -p /opt/odoo-data /opt/odoo-extra-addons /opt/postgresql-data /opt/traefik-letsencrypt
+sudo mkdir -p /opt/odoo-data /opt/odoo-extra-addons /opt/postgresql-data /opt/traefik-letsencrypt /opt/backups
 sudo chown -R 101:101 /opt/odoo-data /opt/odoo-extra-addons
-sudo chmod -R 777 /opt/odoo-data /opt/odoo-extra-addons
+sudo chmod -R 777 /opt/odoo-data /opt/odoo-extra-addons /opt/backups
 sudo chmod -R 755 /opt/postgresql-data /opt/traefik-letsencrypt
 
 # Create PersistentVolumes
@@ -36,6 +36,7 @@ kubectl apply -f postgresql/01-storageclass.yaml 2>/dev/null || true
 kubectl apply -f traefik/01-pv.yaml 2>/dev/null || true
 kubectl apply -f postgresql/00-pv.yaml 2>/dev/null || true
 kubectl apply -f odoo/00-pv.yaml 2>/dev/null || true
+kubectl apply -f backups/00-pv.yaml 2>/dev/null || true
 
 # Deploy Traefik
 echo "📦 Deploying Traefik..."
