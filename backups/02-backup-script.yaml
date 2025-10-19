@@ -43,7 +43,8 @@ data:
             TEMP_DIR="${BACKUP_DIR}/temp_${DB_CLEAN}_${TIMESTAMP}"
             mkdir -p ${TEMP_DIR}
             
-            # Backup database
+            # 1. Backup database in PostgreSQL custom format (for pg_restore)
+            echo "      📦 Creating PostgreSQL dump..."
             PGPASSWORD=${POSTGRES_PASSWORD} pg_dump \
               -h ${DB_HOST} \
               -p ${DB_PORT} \
@@ -52,8 +53,22 @@ data:
               -F c \
               -f ${TEMP_DIR}/database.dump
             
-            DB_SIZE=$(du -h ${TEMP_DIR}/database.dump | cut -f1)
-            echo "      ✅ Database: ${DB_SIZE}"
+            DUMP_SIZE=$(du -h ${TEMP_DIR}/database.dump | cut -f1)
+            echo "         ✅ PostgreSQL dump: ${DUMP_SIZE}"
+            
+            # 2. Backup database in SQL format (for Odoo restore)
+            echo "      📄 Creating SQL dump (Odoo compatible)..."
+            PGPASSWORD=${POSTGRES_PASSWORD} pg_dump \
+              -h ${DB_HOST} \
+              -p ${DB_PORT} \
+              -U ${DB_USER} \
+              -d ${DB_CLEAN} \
+              --no-owner \
+              --no-privileges \
+              -f ${TEMP_DIR}/dump.sql
+            
+            SQL_SIZE=$(du -h ${TEMP_DIR}/dump.sql | cut -f1)
+            echo "         ✅ SQL dump: ${SQL_SIZE}"
             
             # Backup filestore for this database (if exists)
             if [ -d "${ODOO_DATA_DIR}/filestore/${DB_CLEAN}" ]; then
@@ -74,14 +89,33 @@ data:
             # Create directory for this database
             mkdir -p ${BACKUP_DIR}/${DB_CLEAN}
             
-            # Compress this database backup
-            echo "      📦 Compressing..."
+            # Create PostgreSQL backup (tar.gz with database.dump)
+            echo "      📦 Creating PostgreSQL backup..."
             cd ${BACKUP_DIR}
-            tar -czf ${DB_CLEAN}/${TIMESTAMP}.tar.gz -C ${TEMP_DIR} .
-            rm -rf ${TEMP_DIR}
+            tar -czf ${DB_CLEAN}/${TIMESTAMP}_postgresql.tar.gz -C ${TEMP_DIR} database.dump filestore.tar.gz manifest.txt 2>/dev/null || \
+            tar -czf ${DB_CLEAN}/${TIMESTAMP}_postgresql.tar.gz -C ${TEMP_DIR} database.dump manifest.txt
             
-            BACKUP_SIZE=$(du -h ${DB_CLEAN}/${TIMESTAMP}.tar.gz | cut -f1)
-            echo "      ✅ Backup created: ${DB_CLEAN}/${TIMESTAMP}.tar.gz (${BACKUP_SIZE})"
+            PG_SIZE=$(du -h ${DB_CLEAN}/${TIMESTAMP}_postgresql.tar.gz | cut -f1)
+            echo "         ✅ ${TIMESTAMP}_postgresql.tar.gz (${PG_SIZE})"
+            
+            # Create Odoo-compatible backup (zip with dump.sql)
+            echo "      📦 Creating Odoo-compatible backup..."
+            cd ${TEMP_DIR}
+            if [ -f "filestore.tar.gz" ]; then
+                # Extract filestore for ZIP
+                mkdir -p filestore
+                tar -xzf filestore.tar.gz -C filestore
+                zip -r ${BACKUP_DIR}/${DB_CLEAN}/${TIMESTAMP}_odoo.zip dump.sql filestore/ > /dev/null 2>&1
+                rm -rf filestore
+            else
+                zip ${BACKUP_DIR}/${DB_CLEAN}/${TIMESTAMP}_odoo.zip dump.sql > /dev/null 2>&1
+            fi
+            
+            ODOO_SIZE=$(du -h ${BACKUP_DIR}/${DB_CLEAN}/${TIMESTAMP}_odoo.zip | cut -f1)
+            echo "         ✅ ${TIMESTAMP}_odoo.zip (${ODOO_SIZE})"
+            
+            # Cleanup temp directory
+            rm -rf ${TEMP_DIR}
         done
     fi
     
@@ -93,6 +127,7 @@ data:
     echo ""
     echo "🧹 Cleaning backups older than ${RETENTION_DAYS} days..."
     find ${BACKUP_DIR} -name "*.tar.gz" -type f -mtime +${RETENTION_DAYS} -delete
+    find ${BACKUP_DIR} -name "*.zip" -type f -mtime +${RETENTION_DAYS} -delete
     
     # List current backups
     echo ""
@@ -101,7 +136,8 @@ data:
         if [ -d "$DB_DIR" ]; then
             DB_NAME=$(basename "$DB_DIR")
             echo "  📁 ${DB_NAME}:"
-            ls -lh ${DB_DIR}*.tar.gz 2>/dev/null | awk '{print "     " $9 " (" $5 ")"}'
+            ls -lh ${DB_DIR}*_postgresql.tar.gz 2>/dev/null | awk '{print "     🐘 " $9 " (" $5 ")"}'
+            ls -lh ${DB_DIR}*_odoo.zip 2>/dev/null | awk '{print "     📦 " $9 " (" $5 ")"}'
         fi
     done
     
