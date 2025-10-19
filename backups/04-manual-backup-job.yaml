@@ -21,6 +21,8 @@ spec:
               mountPath: /backups
             - name: backup-script
               mountPath: /scripts
+            - name: odoo-data
+              mountPath: /odoo-data
       volumes:
         - name: backup-storage
           persistentVolumeClaim:
@@ -29,3 +31,6 @@ spec:
           configMap:
             name: backup-script
             defaultMode: 0755
+        - name: odoo-data
+          persistentVolumeClaim:
+            claimName: odoo-data
