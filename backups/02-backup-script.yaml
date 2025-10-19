@@ -128,9 +128,10 @@ data:
                 tar -xzf ${TEMP_DIR}/filestore.tar.gz -C ${ODOO_BACKUP_DIR}/filestore --strip-components=1
             fi
             
-            # Create ZIP with the backup directory
+            # Create ZIP with files in root (not in subdirectory)
+            cd ${ODOO_BACKUP_DIR}
+            zip -r ${BACKUP_DIR}/${DB_CLEAN}/${TIMESTAMP}_odoo.zip . > /dev/null 2>&1
             cd ${TEMP_DIR}
-            zip -r ${BACKUP_DIR}/${DB_CLEAN}/${TIMESTAMP}_odoo.zip odoo_backup_${TIMESTAMP}/ > /dev/null 2>&1
             rm -rf ${ODOO_BACKUP_DIR}
             
             ODOO_SIZE=$(du -h ${BACKUP_DIR}/${DB_CLEAN}/${TIMESTAMP}_odoo.zip | cut -f1)
