@@ -42,8 +42,9 @@ data:
             DB_CLEAN=$(echo $DB | xargs)  # Remove whitespace
             echo "   📦 Backing up database: ${DB_CLEAN}..."
             
-            # Create directory for this database
-            mkdir -p ${BACKUP_DIR}/${TIMESTAMP}/${DB_CLEAN}
+            # Create temporary directory for this database
+            TEMP_DIR="${BACKUP_DIR}/temp_${DB_CLEAN}_${TIMESTAMP}"
+            mkdir -p ${TEMP_DIR}
             
             # Backup database
             PGPASSWORD=${POSTGRES_PASSWORD} pg_dump \
@@ -52,64 +53,51 @@ data:
               -U ${DB_USER} \
               -d ${DB_CLEAN} \
               -F c \
-              -f ${BACKUP_DIR}/${TIMESTAMP}/${DB_CLEAN}/database.dump
+              -f ${TEMP_DIR}/database.dump
             
-            DB_SIZE=$(du -h ${BACKUP_DIR}/${TIMESTAMP}/${DB_CLEAN}/database.dump | cut -f1)
-            echo "      ✅ ${DB_CLEAN}: ${DB_SIZE}"
+            DB_SIZE=$(du -h ${TEMP_DIR}/database.dump | cut -f1)
+            echo "      ✅ Database: ${DB_SIZE}"
             
             # Backup filestore for this database (if exists)
             if [ -d "${ODOO_DATA_DIR}/filestore/${DB_CLEAN}" ]; then
-                echo "      📁 Backing up filestore for ${DB_CLEAN}..."
-                tar -czf ${BACKUP_DIR}/${TIMESTAMP}/${DB_CLEAN}/filestore.tar.gz \
+                echo "      📁 Backing up filestore..."
+                tar -czf ${TEMP_DIR}/filestore.tar.gz \
                   -C ${ODOO_DATA_DIR}/filestore ${DB_CLEAN}/
-                FS_SIZE=$(du -h ${BACKUP_DIR}/${TIMESTAMP}/${DB_CLEAN}/filestore.tar.gz | cut -f1)
+                FS_SIZE=$(du -h ${TEMP_DIR}/filestore.tar.gz | cut -f1)
                 echo "         ✅ Filestore: ${FS_SIZE}"
             fi
+            
+            # Create manifest for this database
+            echo "Backup Date: $(date)" > ${TEMP_DIR}/manifest.txt
+            echo "Timestamp: ${TIMESTAMP}" >> ${TEMP_DIR}/manifest.txt
+            echo "Database: ${DB_CLEAN}" >> ${TEMP_DIR}/manifest.txt
+            echo "Odoo Version: 19.0" >> ${TEMP_DIR}/manifest.txt
+            echo "PostgreSQL Version: 17" >> ${TEMP_DIR}/manifest.txt
+            
+            # Compress this database backup
+            echo "      📦 Compressing..."
+            cd ${BACKUP_DIR}
+            tar -czf ${TIMESTAMP}_${DB_CLEAN}.tar.gz -C ${TEMP_DIR} .
+            rm -rf ${TEMP_DIR}
+            
+            BACKUP_SIZE=$(du -h ${TIMESTAMP}_${DB_CLEAN}.tar.gz | cut -f1)
+            echo "      ✅ Backup created: ${TIMESTAMP}_${DB_CLEAN}.tar.gz (${BACKUP_SIZE})"
         done
     fi
     
-    # 2. Backup Odoo sessions (optional)
-    if [ -d "${ODOO_DATA_DIR}/sessions" ]; then
-        echo "💾 [2/2] Backing up Odoo sessions..."
-        tar -czf ${BACKUP_DIR}/${TIMESTAMP}/sessions.tar.gz \
-          -C ${ODOO_DATA_DIR} sessions/
-        echo "   ✅ Sessions backup completed"
-    else
-        echo "ℹ️  [2/2] Sessions not found, skipping..."
-    fi
-    
-    # Create backup manifest
-    echo "📝 Creating backup manifest..."
-    echo "Backup Date: $(date)" > ${BACKUP_DIR}/${TIMESTAMP}/manifest.txt
-    echo "Timestamp: ${TIMESTAMP}" >> ${BACKUP_DIR}/${TIMESTAMP}/manifest.txt
-    echo "Databases: $(echo $DATABASES | wc -w) Odoo database(s)" >> ${BACKUP_DIR}/${TIMESTAMP}/manifest.txt
-    echo "Database Names: ${DATABASES}" >> ${BACKUP_DIR}/${TIMESTAMP}/manifest.txt
-    echo "Filestore Size: ${FS_SIZE:-N/A}" >> ${BACKUP_DIR}/${TIMESTAMP}/manifest.txt
-    echo "Odoo Version: 19.0" >> ${BACKUP_DIR}/${TIMESTAMP}/manifest.txt
-    echo "PostgreSQL Version: 17" >> ${BACKUP_DIR}/${TIMESTAMP}/manifest.txt
-    
-    # Compress complete backup
-    echo "📦 Compressing complete backup..."
-    cd ${BACKUP_DIR}
-    tar -czf ${TIMESTAMP}_complete.tar.gz ${TIMESTAMP}/
-    rm -rf ${TIMESTAMP}/
-    
-    # Calculate total backup size
-    TOTAL_SIZE=$(du -h ${TIMESTAMP}_complete.tar.gz | cut -f1)
     echo ""
-    echo "✅ COMPLETE backup finished: ${TIMESTAMP}_complete.tar.gz"
-    echo "   Total size: ${TOTAL_SIZE}"
-    echo "   Contents: Databases (with individual filestores) + Sessions + Manifest"
+    echo "✅ Backup process completed!"
+    echo "   $(echo $DATABASES | wc -w) database(s) backed up"
     
     # Clean old backups
     echo ""
     echo "🧹 Cleaning backups older than ${RETENTION_DAYS} days..."
-    find ${BACKUP_DIR} -name "*_complete.tar.gz" -type f -mtime +${RETENTION_DAYS} -delete
+    find ${BACKUP_DIR} -name "*.tar.gz" -type f -mtime +${RETENTION_DAYS} -delete
     
     # List current backups
     echo ""
     echo "📋 Current backups:"
-    ls -lh ${BACKUP_DIR}/*_complete.tar.gz 2>/dev/null || echo "No backups found"
+    ls -lh ${BACKUP_DIR}/*.tar.gz 2>/dev/null || echo "No backups found"
     
     echo ""
     echo "✅ Backup process completed at $(date)"
