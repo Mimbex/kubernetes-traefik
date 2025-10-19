@@ -90,7 +90,7 @@ PostgreSQL Version: 17
 EOF
     
     # Compress complete backup
-    echo "🗜️  Compressing complete backup..."
+    echo "📦 Compressing complete backup..."
     cd ${BACKUP_DIR}
     tar -czf ${TIMESTAMP}_complete.tar.gz ${TIMESTAMP}/
     rm -rf ${TIMESTAMP}/
