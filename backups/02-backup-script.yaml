@@ -113,18 +113,14 @@ data:
             cp ${TEMP_DIR}/dump.sql ${ODOO_BACKUP_DIR}/
             
             # Create manifest.json (Odoo-compatible format)
-            cat > ${ODOO_BACKUP_DIR}/manifest.json << 'EOF'
-{
-    "odoo_dump": "1",
-    "db_name": "DB_NAME_PLACEHOLDER",
-    "version": "19.0-20251008",
-    "version_info": [19, 0, 0, "final", 0, ""],
-    "major_version": "19.0",
-    "pg_version": "17.0"
-}
-EOF
-            # Replace placeholder with actual database name
-            sed -i "s/DB_NAME_PLACEHOLDER/${DB_CLEAN}/g" ${ODOO_BACKUP_DIR}/manifest.json
+            echo "{" > ${ODOO_BACKUP_DIR}/manifest.json
+            echo "    \"odoo_dump\": \"1\"," >> ${ODOO_BACKUP_DIR}/manifest.json
+            echo "    \"db_name\": \"${DB_CLEAN}\"," >> ${ODOO_BACKUP_DIR}/manifest.json
+            echo "    \"version\": \"19.0-20251008\"," >> ${ODOO_BACKUP_DIR}/manifest.json
+            echo "    \"version_info\": [19, 0, 0, \"final\", 0, \"\"]," >> ${ODOO_BACKUP_DIR}/manifest.json
+            echo "    \"major_version\": \"19.0\"," >> ${ODOO_BACKUP_DIR}/manifest.json
+            echo "    \"pg_version\": \"17.0\"" >> ${ODOO_BACKUP_DIR}/manifest.json
+            echo "}" >> ${ODOO_BACKUP_DIR}/manifest.json
             
             # Extract and copy filestore if exists
             if [ -f "${TEMP_DIR}/filestore.tar.gz" ]; then
