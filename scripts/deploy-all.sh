@@ -19,6 +19,10 @@ echo "   Odoo Domain: $ODOO_DOMAIN"
 echo "   Let's Encrypt Email: $LETSENCRYPT_EMAIL"
 echo ""
 
+# Clean up old PersistentVolumes if they exist in Released state
+echo "🧹 Cleaning up old resources..."
+kubectl get pv 2>/dev/null | grep Released | awk '{print $1}' | xargs -r kubectl delete pv 2>/dev/null || true
+
 # Create host directories with correct permissions
 echo "📁 Creating host directories..."
 sudo mkdir -p /opt/odoo-data /opt/odoo-extra-addons /opt/postgresql-data /opt/traefik-letsencrypt
