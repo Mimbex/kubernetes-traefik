@@ -6,7 +6,7 @@ metadata:
 data:
   odoo.conf: |
     [options]
-    admin_passwd = odooPassword
+    admin_passwd = ${ODOO_ADMIN_PASSWD}
     db_host = postgresql.postgresql.svc.cluster.local
     db_port = 5432
     db_user = odoo
