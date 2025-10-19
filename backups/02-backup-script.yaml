@@ -104,16 +104,33 @@ data:
             
             # Create Odoo-compatible backup (zip with dump.sql)
             echo "      📦 Creating Odoo-compatible backup..."
-            cd ${TEMP_DIR}
-            if [ -f "filestore.tar.gz" ]; then
-                # Extract filestore for ZIP
-                mkdir -p filestore
-                tar -xzf filestore.tar.gz -C filestore
-                zip -r ${BACKUP_DIR}/${DB_CLEAN}/${TIMESTAMP}_odoo.zip dump.sql filestore/ > /dev/null 2>&1
-                rm -rf filestore
-            else
-                zip ${BACKUP_DIR}/${DB_CLEAN}/${TIMESTAMP}_odoo.zip dump.sql > /dev/null 2>&1
+            
+            # Create Odoo backup directory structure
+            ODOO_BACKUP_DIR="${TEMP_DIR}/odoo_backup_${TIMESTAMP}"
+            mkdir -p ${ODOO_BACKUP_DIR}
+            
+            # Copy dump.sql
+            cp ${TEMP_DIR}/dump.sql ${ODOO_BACKUP_DIR}/
+            
+            # Create manifest.json
+            cat > ${ODOO_BACKUP_DIR}/manifest.json << 'MANIFEST_JSON'
+{
+    "version": "19.0",
+    "timestamp": "$(date -u +%Y-%m-%d\ %H:%M:%S)",
+    "database": "${DB_CLEAN}"
+}
+MANIFEST_JSON
+            
+            # Extract and copy filestore if exists
+            if [ -f "${TEMP_DIR}/filestore.tar.gz" ]; then
+                mkdir -p ${ODOO_BACKUP_DIR}/filestore
+                tar -xzf ${TEMP_DIR}/filestore.tar.gz -C ${ODOO_BACKUP_DIR}/filestore --strip-components=1
             fi
+            
+            # Create ZIP with the backup directory
+            cd ${TEMP_DIR}
+            zip -r ${BACKUP_DIR}/${DB_CLEAN}/${TIMESTAMP}_odoo.zip odoo_backup_${TIMESTAMP}/ > /dev/null 2>&1
+            rm -rf ${ODOO_BACKUP_DIR}
             
             ODOO_SIZE=$(du -h ${BACKUP_DIR}/${DB_CLEAN}/${TIMESTAMP}_odoo.zip | cut -f1)
             echo "         ✅ ${TIMESTAMP}_odoo.zip (${ODOO_SIZE})"
