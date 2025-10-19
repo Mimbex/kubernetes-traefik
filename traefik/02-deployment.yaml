@@ -22,16 +22,20 @@ spec:
           args:
             - --api.insecure=true
             - --providers.kubernetesingress=true
+            - --providers.kubernetescrd=true
             - --entrypoints.web.address=:80
             - --entrypoints.websecure.address=:443
+            - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+            - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
             - --certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}
             - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-            - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
           ports:
             - name: web
               containerPort: 80
+              hostPort: 80
             - name: websecure
               containerPort: 443
+              hostPort: 443
             - name: admin
               containerPort: 8080
           volumeMounts:

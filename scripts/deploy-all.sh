@@ -19,22 +19,6 @@ echo "   Odoo Domain: $ODOO_DOMAIN"
 echo "   Let's Encrypt Email: $LETSENCRYPT_EMAIL"
 echo ""
 
-# Configure iptables to redirect ports 80/443 to NodePorts
-echo "🔧 Configuring port forwarding..."
-sudo iptables -t nat -C PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 30080 2>/dev/null || \
-  sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 30080
-sudo iptables -t nat -C PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 30443 2>/dev/null || \
-  sudo iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 30443
-
-# Install iptables-persistent if not installed
-if ! command -v netfilter-persistent &> /dev/null; then
-    echo "📦 Installing iptables-persistent..."
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y iptables-persistent
-fi
-
-# Save iptables rules
-sudo netfilter-persistent save 2>/dev/null || true
-
 # Create host directories with correct permissions
 echo "📁 Creating host directories..."
 sudo mkdir -p /opt/odoo-data /opt/odoo-extra-addons /opt/postgresql-data /opt/traefik-letsencrypt
