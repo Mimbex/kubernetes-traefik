@@ -27,7 +27,8 @@ kubectl get pv 2>/dev/null | grep Released | awk '{print $1}' | xargs -r kubectl
 echo "📁 Creating host directories..."
 sudo mkdir -p /opt/odoo-data /opt/odoo-extra-addons /opt/postgresql-data /opt/traefik-letsencrypt
 sudo chown -R 101:101 /opt/odoo-data /opt/odoo-extra-addons
-sudo chmod -R 755 /opt/odoo-data /opt/odoo-extra-addons
+sudo chmod -R 777 /opt/odoo-data /opt/odoo-extra-addons
+sudo chmod -R 755 /opt/postgresql-data /opt/traefik-letsencrypt
 
 # Create PersistentVolumes
 echo "📦 Creating storage..."
