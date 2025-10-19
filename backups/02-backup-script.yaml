@@ -113,13 +113,11 @@ data:
             cp ${TEMP_DIR}/dump.sql ${ODOO_BACKUP_DIR}/
             
             # Create manifest.json
-            cat > ${ODOO_BACKUP_DIR}/manifest.json << 'MANIFEST_JSON'
-{
-    "version": "19.0",
-    "timestamp": "$(date -u +%Y-%m-%d\ %H:%M:%S)",
-    "database": "${DB_CLEAN}"
-}
-MANIFEST_JSON
+            echo "{" > ${ODOO_BACKUP_DIR}/manifest.json
+            echo "    \"version\": \"19.0\"," >> ${ODOO_BACKUP_DIR}/manifest.json
+            echo "    \"timestamp\": \"$(date -u +%Y-%m-%d\ %H:%M:%S)\"," >> ${ODOO_BACKUP_DIR}/manifest.json
+            echo "    \"database\": \"${DB_CLEAN}\"" >> ${ODOO_BACKUP_DIR}/manifest.json
+            echo "}" >> ${ODOO_BACKUP_DIR}/manifest.json
             
             # Extract and copy filestore if exists
             if [ -f "${TEMP_DIR}/filestore.tar.gz" ]; then
