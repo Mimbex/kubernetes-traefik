@@ -71,14 +71,17 @@ data:
             echo "Odoo Version: 19.0" >> ${TEMP_DIR}/manifest.txt
             echo "PostgreSQL Version: 17" >> ${TEMP_DIR}/manifest.txt
             
+            # Create directory for this database
+            mkdir -p ${BACKUP_DIR}/${DB_CLEAN}
+            
             # Compress this database backup
             echo "      📦 Compressing..."
             cd ${BACKUP_DIR}
-            tar -czf ${TIMESTAMP}_${DB_CLEAN}.tar.gz -C ${TEMP_DIR} .
+            tar -czf ${DB_CLEAN}/${TIMESTAMP}.tar.gz -C ${TEMP_DIR} .
             rm -rf ${TEMP_DIR}
             
-            BACKUP_SIZE=$(du -h ${TIMESTAMP}_${DB_CLEAN}.tar.gz | cut -f1)
-            echo "      ✅ Backup created: ${TIMESTAMP}_${DB_CLEAN}.tar.gz (${BACKUP_SIZE})"
+            BACKUP_SIZE=$(du -h ${DB_CLEAN}/${TIMESTAMP}.tar.gz | cut -f1)
+            echo "      ✅ Backup created: ${DB_CLEAN}/${TIMESTAMP}.tar.gz (${BACKUP_SIZE})"
         done
     fi
     
@@ -93,8 +96,14 @@ data:
     
     # List current backups
     echo ""
-    echo "📋 Current backups:"
-    ls -lh ${BACKUP_DIR}/*.tar.gz 2>/dev/null || echo "No backups found"
+    echo "📋 Current backups by database:"
+    for DB_DIR in ${BACKUP_DIR}/*/; do
+        if [ -d "$DB_DIR" ]; then
+            DB_NAME=$(basename "$DB_DIR")
+            echo "  📁 ${DB_NAME}:"
+            ls -lh ${DB_DIR}*.tar.gz 2>/dev/null | awk '{print "     " $9 " (" $5 ")"}'
+        fi
+    done
     
     echo ""
     echo "✅ Backup process completed at $(date)"
