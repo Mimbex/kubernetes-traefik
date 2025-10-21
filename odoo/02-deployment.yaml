@@ -28,6 +28,13 @@ spec:
               value: odoo
             - name: PASSWORD
               value: odoo
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1000m"
+            limits:
+              memory: "4Gi"
+              cpu: "2000m"
           volumeMounts:
             - name: odoo-data
               mountPath: /var/lib/odoo
