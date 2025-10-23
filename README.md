@@ -58,7 +58,7 @@ See [INSTALL.md](INSTALL.md) for detailed installation guide.
 
 ## 📦 Super Simple Installation (Recommended)
 
-### Video 1: Kubernetes + Dashboard
+### Step 1: Install Kubernetes + Dashboard
 
 **Install Kubernetes with visual tools:**
 
@@ -75,7 +75,7 @@ This script installs:
 
 ⏱️ Takes 5-8 minutes.
 
-### Video 2: Odoo + Backups
+### Step 2: Deploy Odoo + Backups
 
 **Deploy Odoo stack:**
 

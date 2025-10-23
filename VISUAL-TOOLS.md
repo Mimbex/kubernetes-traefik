@@ -221,7 +221,6 @@ k9s
 ### k9s
 - Documentation: https://k9scli.io/
 - Keyboard shortcuts: Press `?` in k9s
-- Video tutorial: https://www.youtube.com/watch?v=T4VN-eO9T6E
 
 ### Kubernetes Dashboard
 - Documentation: https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
