@@ -1,35 +1,56 @@
 #!/bin/bash
 
-echo "🚀 Odoo Stack Installation"
-echo "==========================="
+echo "🚀 Complete Odoo Stack Installation"
+echo "===================================="
 echo ""
 echo "This script will install:"
+echo "  ✅ Kubernetes (if not present)"
 echo "  ✅ Odoo 19"
 echo "  ✅ PostgreSQL 17"
 echo "  ✅ Traefik with SSL"
 echo "  ✅ Automated Backups"
 echo ""
-echo "⏱️  Estimated time: 5-7 minutes"
+echo "⏱️  Estimated time: 5-15 minutes (depending on what's already installed)"
 echo ""
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Check if kubectl is available
-if ! command -v kubectl &> /dev/null; then
-    echo "❌ kubectl not found!"
+# Check if kubectl is available and cluster is running
+if ! command -v kubectl &> /dev/null || ! kubectl cluster-info &> /dev/null; then
+    echo "⚠️  Kubernetes not detected!"
     echo ""
-    echo "Please install Kubernetes first:"
-    echo "  sudo ./install-kubernetes-complete.sh"
-    exit 1
-fi
-
-# Check if cluster is running
-if ! kubectl cluster-info &> /dev/null; then
-    echo "❌ Kubernetes cluster not running!"
+    echo "Installing Kubernetes cluster first..."
     echo ""
-    echo "Please start your cluster first:"
-    echo "  sudo ./install-kubernetes-complete.sh"
-    exit 1
+    
+    # Check if install script exists
+    if [ ! -f "$SCRIPT_DIR/install-kubernetes-complete.sh" ]; then
+        echo "❌ install-kubernetes-complete.sh not found!"
+        echo "Please run from the correct directory."
+        exit 1
+    fi
+    
+    # Make executable and run
+    chmod +x "$SCRIPT_DIR/install-kubernetes-complete.sh"
+    
+    # Check if running as root
+    if [ "$EUID" -ne 0 ]; then
+        echo "🔐 Kubernetes installation requires root privileges."
+        echo "Running with sudo..."
+        sudo "$SCRIPT_DIR/install-kubernetes-complete.sh"
+    else
+        "$SCRIPT_DIR/install-kubernetes-complete.sh"
+    fi
+    
+    # Verify installation
+    if ! kubectl cluster-info &> /dev/null; then
+        echo "❌ Kubernetes installation failed!"
+        exit 1
+    fi
+    
+    echo ""
+    echo "✅ Kubernetes installed successfully!"
+    echo ""
+    sleep 2
 fi
 
 echo "✅ Kubernetes cluster detected"
