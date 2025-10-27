@@ -1,0 +1,67 @@
+FROM python:3.11-slim-bookworm
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    dirmngr \
+    fonts-noto-cjk \
+    gnupg \
+    libssl-dev \
+    node-less \
+    npm \
+    python3-num2words \
+    python3-pdfminer \
+    python3-pip \
+    python3-phonenumbers \
+    python3-pyldap \
+    python3-qrcode \
+    python3-renderpm \
+    python3-setuptools \
+    python3-slugify \
+    python3-vobject \
+    python3-watchdog \
+    python3-xlrd \
+    python3-xlwt \
+    xz-utils \
+    git \
+    build-essential \
+    libpq-dev \
+    libsasl2-dev \
+    libldap2-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install wkhtmltopdf
+RUN curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends ./wkhtmltox.deb \
+    && rm -rf /var/lib/apt/lists/* wkhtmltox.deb
+
+# Create odoo user
+RUN useradd -ms /bin/bash odoo
+
+# Clone Odoo from specific branch
+ARG ODOO_VERSION=17.4
+RUN git clone --depth 1 --branch saas-${ODOO_VERSION} https://github.com/odoo/odoo.git /opt/odoo
+
+# Install Python dependencies
+RUN pip3 install --no-cache-dir -r /opt/odoo/requirements.txt
+
+# Set permissions
+RUN chown -R odoo:odoo /opt/odoo
+
+# Create directories
+RUN mkdir -p /var/lib/odoo /mnt/extra-addons \
+    && chown -R odoo:odoo /var/lib/odoo /mnt/extra-addons
+
+# Expose Odoo services
+EXPOSE 8069 8072
+
+# Set default user
+USER odoo
+
+# Set environment variables
+ENV ODOO_RC=/etc/odoo/odoo.conf
+
+# Run Odoo
+CMD ["/opt/odoo/odoo-bin"]
