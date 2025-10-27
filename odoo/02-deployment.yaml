@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: odoo
-          image: odoo:19.0
+          image: odoo:${ODOO_VERSION}
           ports:
             - containerPort: 8069
               name: http
