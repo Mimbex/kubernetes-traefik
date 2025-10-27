@@ -1,19 +1,30 @@
 #!/bin/bash
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load .env to get versions (if exists)
+if [ -f "$SCRIPT_DIR/.env" ]; then
+    source "$SCRIPT_DIR/.env"
+elif [ -f "$SCRIPT_DIR/.env.example" ]; then
+    source "$SCRIPT_DIR/.env.example"
+fi
+
+# Set defaults if not loaded
+ODOO_VERSION=${ODOO_VERSION:-17.4}
+POSTGRES_VERSION=${POSTGRES_VERSION:-17}
+
 echo "🚀 Complete Odoo Stack Installation"
 echo "===================================="
 echo ""
 echo "This script will install:"
 echo "  ✅ Kubernetes (if not present)"
-echo "  ✅ Odoo 19"
-echo "  ✅ PostgreSQL 17"
+echo "  ✅ Odoo ${ODOO_VERSION}"
+echo "  ✅ PostgreSQL ${POSTGRES_VERSION}"
 echo "  ✅ Traefik with SSL"
 echo "  ✅ Automated Backups"
 echo ""
 echo "⏱️  Estimated time: 5-15 minutes (depending on what's already installed)"
 echo ""
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Check if kubectl is available and cluster is running
 if ! command -v kubectl &> /dev/null || ! kubectl cluster-info &> /dev/null; then
@@ -124,8 +135,8 @@ echo "=========================================="
 echo "🎉 ODOO INSTALLATION COMPLETE!"
 echo "=========================================="
 echo ""
-echo "✅ Odoo 19 deployed"
-echo "✅ PostgreSQL 17 running"
+echo "✅ Odoo ${ODOO_VERSION} deployed"
+echo "✅ PostgreSQL ${POSTGRES_VERSION} running"
 echo "✅ Traefik with SSL configured"
 echo "✅ Automated backups enabled (daily at 2:00 AM)"
 echo ""
