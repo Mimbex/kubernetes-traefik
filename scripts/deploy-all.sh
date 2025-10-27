@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "🚀 Deploying Kubernetes + Traefik + Odoo 19 + PostgreSQL"
-echo "=========================================================="
+echo "🚀 Deploying Kubernetes + Traefik + Odoo + PostgreSQL"
+echo "======================================================"
 
 # Load environment variables
 if [ ! -f .env ]; then
@@ -15,9 +15,42 @@ source .env
 set +a
 
 echo "📋 Configuration:"
+echo "   Odoo Version: $ODOO_VERSION"
 echo "   Odoo Domain: $ODOO_DOMAIN"
 echo "   Let's Encrypt Email: $LETSENCRYPT_EMAIL"
 echo ""
+
+# Check if we need to build custom Odoo image
+MAJOR_VERSION=$(echo $ODOO_VERSION | cut -d'.' -f1)
+MINOR_VERSION=$(echo $ODOO_VERSION | cut -d'.' -f2)
+
+# If minor version exists and is not 0, we need to build from source
+if [ ! -z "$MINOR_VERSION" ] && [ "$MINOR_VERSION" != "0" ]; then
+    echo "🔨 Custom Odoo version detected: $ODOO_VERSION"
+    echo "   Building Docker image from source (saas-$ODOO_VERSION branch)..."
+    echo ""
+    
+    # Check if Docker is available
+    if ! command -v docker &> /dev/null; then
+        echo "❌ Docker not found! Cannot build custom image."
+        echo "   Install Docker or use a standard version (17.0, 16.0, etc.)"
+        exit 1
+    fi
+    
+    # Build custom image
+    echo "📦 Building odoo:$ODOO_VERSION (this may take 5-10 minutes)..."
+    cd odoo
+    docker build -t odoo:$ODOO_VERSION --build-arg ODOO_VERSION=$ODOO_VERSION -f Dockerfile.custom . || {
+        echo "❌ Failed to build Docker image"
+        exit 1
+    }
+    cd ..
+    echo "✅ Custom Odoo image built successfully!"
+    echo ""
+else
+    echo "📦 Using official Odoo image from Docker Hub: odoo:$ODOO_VERSION"
+    echo ""
+fi
 
 # Clean up old PersistentVolumes if they exist in Released state
 echo "🧹 Cleaning up old resources..."
