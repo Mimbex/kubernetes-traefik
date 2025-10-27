@@ -92,7 +92,7 @@ data:
             echo "Backup Date: $(date)" > ${TEMP_DIR}/manifest.txt
             echo "Timestamp: ${TIMESTAMP}" >> ${TEMP_DIR}/manifest.txt
             echo "Database: ${DB_CLEAN}" >> ${TEMP_DIR}/manifest.txt
-            echo "Odoo Version: 19.0" >> ${TEMP_DIR}/manifest.txt
+            echo "Odoo Version: ${ODOO_VERSION}" >> ${TEMP_DIR}/manifest.txt
             echo "PostgreSQL Version: 17" >> ${TEMP_DIR}/manifest.txt
             
             # Create directory for this database
