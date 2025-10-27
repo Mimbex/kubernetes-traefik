@@ -19,6 +19,8 @@ spec:
               env:
                 - name: POSTGRES_PASSWORD
                   value: "odoo"  # Should match your PostgreSQL password
+                - name: ODOO_VERSION
+                  value: "${ODOO_VERSION}"
               command:
                 - /bin/bash
                 - /scripts/backup.sh

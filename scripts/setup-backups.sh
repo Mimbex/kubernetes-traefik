@@ -21,7 +21,7 @@ kubectl apply -f backups/02-backup-script.yaml
 kubectl apply -f backups/05-restore-script.yaml
 
 echo "Creating backup CronJob..."
-kubectl apply -f backups/03-cronjob.yaml
+envsubst < backups/03-cronjob.yaml | kubectl apply -f -
 
 echo ""
 echo "✅ Backup system configured!"

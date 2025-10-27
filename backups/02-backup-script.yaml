@@ -22,6 +22,11 @@ data:
     ODOO_DATA_DIR="/odoo-data"
     RETENTION_DAYS=7
     
+    # Get Odoo version from environment variable (default to 17.0 if not set)
+    ODOO_VERSION=${ODOO_VERSION:-17.0}
+    ODOO_MAJOR=$(echo $ODOO_VERSION | cut -d'.' -f1)
+    ODOO_MINOR=$(echo $ODOO_VERSION | cut -d'.' -f2)
+    
     echo "🔄 Starting COMPLETE backup at $(date)"
     echo "================================================"
     
@@ -116,9 +121,9 @@ data:
             echo "{" > ${ODOO_BACKUP_DIR}/manifest.json
             echo "    \"odoo_dump\": \"1\"," >> ${ODOO_BACKUP_DIR}/manifest.json
             echo "    \"db_name\": \"${DB_CLEAN}\"," >> ${ODOO_BACKUP_DIR}/manifest.json
-            echo "    \"version\": \"19.0-20251008\"," >> ${ODOO_BACKUP_DIR}/manifest.json
-            echo "    \"version_info\": [19, 0, 0, \"final\", 0, \"\"]," >> ${ODOO_BACKUP_DIR}/manifest.json
-            echo "    \"major_version\": \"19.0\"," >> ${ODOO_BACKUP_DIR}/manifest.json
+            echo "    \"version\": \"${ODOO_VERSION}-$(date +%Y%m%d)\"," >> ${ODOO_BACKUP_DIR}/manifest.json
+            echo "    \"version_info\": [${ODOO_MAJOR}, ${ODOO_MINOR}, 0, \"final\", 0, \"\"]," >> ${ODOO_BACKUP_DIR}/manifest.json
+            echo "    \"major_version\": \"${ODOO_VERSION}\"," >> ${ODOO_BACKUP_DIR}/manifest.json
             echo "    \"pg_version\": \"17.0\"" >> ${ODOO_BACKUP_DIR}/manifest.json
             echo "}" >> ${ODOO_BACKUP_DIR}/manifest.json
             
