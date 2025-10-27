@@ -84,8 +84,20 @@ EOF
     apt-get install -y containerd
     mkdir -p /etc/containerd
     containerd config default | tee /etc/containerd/config.toml
+    
+    # Enable SystemdCgroup (CRITICAL for Kubernetes)
+    sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
+    
     systemctl restart containerd
     systemctl enable containerd
+    
+    # Verify containerd is running
+    if ! systemctl is-active --quiet containerd; then
+        echo "❌ containerd failed to start"
+        systemctl status containerd
+        exit 1
+    fi
+    echo "✅ containerd is running"
     
     # Install kubeadm, kubelet, kubectl
     echo ""
@@ -156,8 +168,20 @@ EOF
     yum install -y containerd.io
     mkdir -p /etc/containerd
     containerd config default | tee /etc/containerd/config.toml
+    
+    # Enable SystemdCgroup (CRITICAL for Kubernetes)
+    sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
+    
     systemctl restart containerd
     systemctl enable containerd
+    
+    # Verify containerd is running
+    if ! systemctl is-active --quiet containerd; then
+        echo "❌ containerd failed to start"
+        systemctl status containerd
+        exit 1
+    fi
+    echo "✅ containerd is running"
     
     # Install kubeadm, kubelet, kubectl
     echo ""
