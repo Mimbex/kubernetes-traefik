@@ -57,6 +57,10 @@ fi
 echo "📦 Using official Odoo image from Docker Hub: odoo:$ODOO_VERSION"
 echo ""
 
+# Check and fix CNI plugins if needed
+echo "🔍 Checking CNI plugins..."
+bash scripts/fix-cni-plugins.sh
+
 # Clean up old PersistentVolumes if they exist in Released state
 echo "🧹 Cleaning up old resources..."
 kubectl get pv 2>/dev/null | grep Released | awk '{print $1}' | xargs -r kubectl delete pv 2>/dev/null || true
