@@ -3,22 +3,11 @@
 echo "🔄 Restarting Odoo..."
 echo ""
 
-# Check if ConfigMap was modified
-if git diff --quiet HEAD -- odoo/01-configmap.yaml 2>/dev/null; then
-    CONFIG_CHANGED=false
-else
-    CONFIG_CHANGED=true
-fi
+# Force fast restart by default
+FORCE_FAST="${1:-}"
 
-# Check if there are uncommitted changes to ConfigMap
-if [ -f "odoo/01-configmap.yaml" ]; then
-    if git status --porcelain odoo/01-configmap.yaml 2>/dev/null | grep -q "^.M"; then
-        CONFIG_CHANGED=true
-    fi
-fi
-
-if [ "$CONFIG_CHANGED" = true ]; then
-    echo "⚙️  ConfigMap changes detected, applying full restart..."
+if [ "$FORCE_FAST" = "--full" ]; then
+    echo "⚙️  Full restart requested..."
     echo ""
     
     # Apply ConfigMap
@@ -26,12 +15,12 @@ if [ "$CONFIG_CHANGED" = true ]; then
     envsubst < odoo/01-configmap.yaml | kubectl apply -f -
     
     echo ""
-    echo "2️⃣ Restarting Odoo deployment..."
-    kubectl rollout restart deployment/odoo -n odoo
+    echo "2️⃣ Deleting all pods to force recreation..."
+    kubectl delete pod -n odoo -l app=odoo --force --grace-period=0
     
     echo ""
-    echo "⏳ Waiting for Odoo to restart..."
-    kubectl rollout status deployment/odoo -n odoo --timeout=120s
+    echo "⏳ Waiting for new pod to be ready..."
+    kubectl wait --for=condition=ready pod -l app=odoo -n odoo --timeout=120s
     
 else
     echo "⚡ Fast restart (no config changes)..."
