@@ -13,6 +13,22 @@ spec:
       labels:
         app: odoo
     spec:
+      initContainers:
+        - name: install-requirements
+          image: odoo:${ODOO_VERSION}
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              if [ -f /mnt/extra-addons/requirements.txt ]; then
+                echo "📦 Installing Python dependencies from requirements.txt..."
+                pip3 install --no-cache-dir -r /mnt/extra-addons/requirements.txt
+                echo "✅ Dependencies installed"
+              else
+                echo "ℹ️  No requirements.txt found, skipping..."
+              fi
+          volumeMounts:
+            - name: extra-addons
+              mountPath: /mnt/extra-addons
       containers:
         - name: odoo
           image: odoo:${ODOO_VERSION}
