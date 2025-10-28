@@ -4,10 +4,19 @@ echo "🔧 CNI Plugins Fix Script"
 echo "========================="
 echo ""
 
-# Check if CNI plugins exist
-if [ ! -d "/opt/cni/bin" ] || [ -z "$(ls -A /opt/cni/bin)" ]; then
-    echo "⚠️  CNI plugins not found or empty"
-    echo "📦 Installing CNI plugins..."
+# Check if required CNI plugins exist
+REQUIRED_PLUGINS="loopback bridge host-local portmap"
+MISSING_PLUGINS=""
+
+for plugin in $REQUIRED_PLUGINS; do
+    if [ ! -f "/opt/cni/bin/$plugin" ]; then
+        MISSING_PLUGINS="$MISSING_PLUGINS $plugin"
+    fi
+done
+
+if [ ! -z "$MISSING_PLUGINS" ]; then
+    echo "⚠️  Missing CNI plugins:$MISSING_PLUGINS"
+    echo "📦 Installing complete CNI plugin set..."
     
     sudo mkdir -p /opt/cni/bin
     CNI_VERSION="v1.3.0"
@@ -20,7 +29,8 @@ if [ ! -d "/opt/cni/bin" ] || [ -z "$(ls -A /opt/cni/bin)" ]; then
         exit 1
     fi
     
-    sudo tar -xzf cni-plugins.tgz -C /opt/cni/bin/
+    # Extract without overwriting flannel
+    sudo tar -xzf cni-plugins.tgz -C /opt/cni/bin/ --skip-old-files 2>/dev/null || sudo tar -xzf cni-plugins.tgz -C /opt/cni/bin/
     rm cni-plugins.tgz
     
     echo "✅ CNI plugins installed"
@@ -33,8 +43,7 @@ if [ ! -d "/opt/cni/bin" ] || [ -z "$(ls -A /opt/cni/bin)" ]; then
     echo "✅ containerd restarted"
     echo ""
 else
-    echo "✅ CNI plugins already installed"
-    ls -la /opt/cni/bin/ | head -5
+    echo "✅ All required CNI plugins present"
     echo ""
 fi
 
