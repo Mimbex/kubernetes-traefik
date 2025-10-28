@@ -99,6 +99,16 @@ EOF
     fi
     echo "✅ containerd is running"
     
+    # Install CNI plugins
+    echo ""
+    echo "5.5️⃣ Installing CNI plugins..."
+    mkdir -p /opt/cni/bin
+    CNI_VERSION="v1.3.0"
+    wget -q https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-amd64-${CNI_VERSION}.tgz -O /tmp/cni-plugins.tgz
+    tar -xzf /tmp/cni-plugins.tgz -C /opt/cni/bin/
+    rm /tmp/cni-plugins.tgz
+    echo "✅ CNI plugins installed"
+    
     # Install kubeadm, kubelet, kubectl
     echo ""
     echo "6️⃣ Installing Kubernetes components..."
@@ -182,6 +192,16 @@ EOF
         exit 1
     fi
     echo "✅ containerd is running"
+    
+    # Install CNI plugins
+    echo ""
+    echo "6.5️⃣ Installing CNI plugins..."
+    mkdir -p /opt/cni/bin
+    CNI_VERSION="v1.3.0"
+    wget -q https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-amd64-${CNI_VERSION}.tgz -O /tmp/cni-plugins.tgz
+    tar -xzf /tmp/cni-plugins.tgz -C /opt/cni/bin/
+    rm /tmp/cni-plugins.tgz
+    echo "✅ CNI plugins installed"
     
     # Install kubeadm, kubelet, kubectl
     echo ""
