@@ -2,6 +2,8 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: postgresql-data-pv-0
+  labels:
+    type: postgresql-db
 spec:
   capacity:
     storage: 10Gi

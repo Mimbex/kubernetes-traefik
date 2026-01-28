@@ -47,6 +47,9 @@ spec:
       spec:
         accessModes: ["ReadWriteOnce"]
         storageClassName: "manual"
+        selector:
+          matchLabels:
+            type: postgresql-db
         resources:
           requests:
             storage: 10Gi
