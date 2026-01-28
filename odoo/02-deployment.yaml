@@ -66,8 +66,8 @@ spec:
         - name: odoo
           image: odoo:18
           imagePullPolicy: Always
-          # Disable auto-init loop. Just start server.
-          command: ["/bin/bash", "-c", "odoo -c /etc/odoo-ro/odoo.conf"]
+          # Auto-init restored (safe now that DB exists)
+          command: ["/bin/bash", "/etc/odoo-ro/init_db.sh"]
           ports:
             - containerPort: 8069
               name: http
