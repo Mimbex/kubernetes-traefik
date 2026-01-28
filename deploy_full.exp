@@ -1,0 +1,87 @@
+#!/usr/bin/expect -f
+
+# Config
+set ip "161.132.45.204"
+set user "root"
+set password "LQA4yEht9FaG"
+set repo "https://github.com/Mimbex/kubernetes-traefik.git"
+set dir "/opt/kubernetes-traefik"
+
+set timeout 1800
+
+spawn ssh -o StrictHostKeyChecking=no $user@$ip
+
+expect {
+    "password:" {
+        send "$password\r"
+        exp_continue
+    }
+    "Connection refused" {
+        send_user "\n❌ VPS aun reiniciando, reintentando en 10s...\n"
+        sleep 10
+        exp_continue
+    }
+    "timeout" {
+        send_user "\n❌ Timeout conectando, reintentando...\n"
+        exp_continue
+    }
+    "# " {
+        send_user "\n✅ Conectado!\n"
+    }
+}
+
+send "export DEBIAN_FRONTEND=noninteractive\r"
+expect "# "
+
+# Asegurar que dpkg este sano despues del reboot (por si acaso quedaron installs a medias)
+send "dpkg --configure -a\r"
+expect "# "
+
+# Instalar Git
+send "apt-get update && apt-get install -y git\r"
+expect "# "
+
+# Limpieza y Clonacion
+send "rm -rf $dir\r"
+expect "# "
+
+send "git clone $repo $dir\r"
+expect "# "
+
+send "cd $dir\r"
+expect "# "
+
+send "cp .env.example .env\r"
+expect "# "
+
+# Configurar .env
+send "sed -i 's/ODOO_VERSION=19.0/ODOO_VERSION=19.0/' .env\r"
+expect "# "
+send "sed -i 's/POSTGRES_VERSION=17/POSTGRES_VERSION=17/' .env\r"
+expect "# "
+send "sed -i 's/ODOO_DOMAIN=odoo.yourdomain.com/ODOO_DOMAIN=cubica.smartech.pe/' .env\r"
+expect "# "
+send "sed -i 's/LETSENCRYPT_EMAIL=your-email@example.com/LETSENCRYPT_EMAIL=admin@smartech.pe/' .env\r"
+expect "# "
+
+send "chmod +x *.sh scripts/*.sh odooctl\r"
+expect "# "
+
+# LANZAR INSTALACION
+send "./install-everything.sh\r"
+
+expect "Continue with installation? (yes/no): "
+send "yes\r"
+
+expect {
+    "Installation Complete!" {
+        send_user "\n✅ INSTALACION COMPLETADA EXITOSAMENTE! 🎉\n"
+        send_user "Accede a: https://cubica.smartech.pe\n"
+    }
+    timeout {
+        send_user "\n⚠️ La instalacion sigue corriendo en background.\n"
+    }
+}
+
+send "exit\r"
+expect eof

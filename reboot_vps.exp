@@ -1,0 +1,15 @@
+#!/usr/bin/expect -f
+
+# Config
+set ip "161.132.45.204"
+set user "root"
+set password "LQA4yEht9FaG"
+
+# REINICIO DE EMERGENCIA
+set timeout 60
+spawn ssh -o StrictHostKeyChecking=no $user@$ip
+expect "password:"
+send "$password\r"
+expect "# "
+send "reboot\r"
+expect eof

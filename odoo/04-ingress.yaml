@@ -12,7 +12,6 @@ metadata:
     traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
     traefik.ingress.kubernetes.io/service.sticky.cookie.name: "odoo_session"
     # Timeouts for longpolling
-    traefik.ingress.kubernetes.io/router.middlewares: odoo-timeout@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
