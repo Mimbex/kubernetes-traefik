@@ -60,6 +60,52 @@ POSTGRES_VERSION=16    # Options: 17, 16, 15, 14
 
 **After installation**, see [Change Odoo or PostgreSQL Version](#change-odoo-or-postgresql-version) section below.
 
+### 🎯 Professional CLI (Production-Ready)
+
+After installation, manage Odoo with professional commands:
+
+**Using `odooctl` (kubectl-style):**
+```bash
+# Deploy and manage
+odooctl deploy                           # Deploy Odoo stack
+odooctl restart                          # Restart Odoo
+odooctl scale 3                          # Scale to 3 replicas
+odooctl status                           # Show status
+
+# Logs and monitoring
+odooctl logs --follow                    # Follow logs
+odooctl top                              # Resource usage
+odooctl describe                         # Detailed info
+
+# Module management
+odooctl module install /path/to/module   # Install module
+odooctl module list                      # List modules
+
+# Database operations
+odooctl db backup                        # Backup database
+odooctl db restore backup.tar.gz         # Restore backup
+
+# Development
+odooctl shell                            # Access pod shell
+odooctl port-forward 8069                # Forward port
+
+# Help
+odooctl help                             # Show all commands
+```
+
+**Using `make` (Makefile):**
+```bash
+make help                # Show all targets
+make deploy              # Deploy Odoo
+make restart             # Restart Odoo
+make logs                # View logs
+make logs-follow         # Follow logs
+make status              # Show status
+make shell               # Access shell
+make backup              # Backup database
+make build VERSION=19.0  # Build custom image
+```
+
 ---
 
 ## 📋 Manual Installation (Step by Step)
@@ -221,54 +267,56 @@ See [odoo/README.md](odoo/README.md) for complete documentation.
 
 ## 🛠️ Common Operations
 
-### View Logs
+### Quick Commands (Professional CLI)
 
 ```bash
-# Odoo logs
-kubectl logs -n odoo -l app=odoo -f
+# Restart Odoo (after installing modules or config changes)
+odooctl restart
+# or
+make restart
 
-# PostgreSQL logs
-kubectl logs -n postgresql -l app=postgresql -f
+# View logs
+odooctl logs --follow
+# or
+make logs-follow
 
-# Traefik logs
-kubectl logs -n traefik -l app=traefik -f
+# Install a custom module
+odooctl module install /path/to/your_module
+# or from Git
+odooctl module install https://github.com/user/module.git
+
+# Check status
+odooctl status
+# or
+make status
+
+# Backup database
+odooctl db backup
+# or
+make backup
+
+# Scale Odoo
+odooctl scale 3
+# or
+make scale REPLICAS=3
 ```
 
-### Scale Odoo
+### Traditional kubectl Commands (Advanced)
+
+If you prefer raw kubectl:
 
 ```bash
-# Scale to 3 replicas
+# View logs
+kubectl logs -n odoo -l app=odoo -f          # Odoo
+kubectl logs -n postgresql -l app=postgresql -f  # PostgreSQL
+kubectl logs -n traefik -l app=traefik -f    # Traefik
+
+# Restart Odoo
+kubectl rollout restart deployment odoo -n odoo
+
+# Scale Odoo
 kubectl scale deployment odoo -n odoo --replicas=3
-
-# Verify
-kubectl get pods -n odoo
 ```
-
-### Restart Odoo
-
-```bash
-./restart-odoo.sh
-```
-
-### Manual Backup
-
-```bash
-./scripts/backup-now.sh
-```
-
-### List Backups
-
-```bash
-./scripts/list-backups.sh
-```
-
-### Restore from Backup
-
-```bash
-./scripts/restore-backup.sh 20251017_020000.tar.gz
-```
-
-⚠️ **Warning:** This will overwrite your current database!
 
 ### Change Odoo or PostgreSQL Version
 
