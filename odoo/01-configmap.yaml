@@ -6,27 +6,112 @@ metadata:
 data:
   odoo.conf: |
     [options]
+    # ============================================
+    # Database Configuration
+    # ============================================
     admin_passwd = ${ODOO_ADMIN_PASSWD}
     db_host = postgresql.postgresql.svc.cluster.local
     db_port = 5432
-    db_user = odoo
-    db_password = odoo
-    addons_path = /usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
-    data_dir = /var/lib/odoo
-    proxy_mode = True
+    db_user = ${POSTGRES_USER}
+    db_password = ${POSTGRES_PASSWORD}
+    db_name = False
+    db_template = template0
     dbfilter = ^%d$
     
-    # Performance Configuration
+    # ============================================
+    # Addons Configuration
+    # ============================================
+    addons_path = /usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
+    data_dir = /var/lib/odoo
+    
+    # ============================================
+    # Network Configuration
+    # ============================================
+    # Proxy mode (required for Traefik/Ingress)
+    proxy_mode = True
+    
+    # HTTP Interface
+    http_interface = 0.0.0.0
+    http_port = 8069
+    
+    # Longpolling (WebSocket) - CRITICAL for real-time features
+    longpolling_port = 8072
+    gevent_port = 8072
+    
+    # ============================================
+    # Workers Configuration (Production Mode)
+    # ============================================
+    # Formula: workers = (CPU cores × 2) + 1
+    # For 2 CPUs: 4 workers is optimal
     workers = 4
     max_cron_threads = 2
     
-    # Gevent mode for better concurrency
+    # Gevent mode for better concurrency and longpolling
+    # REQUIRED for real-time features (POS, chat, notifications)
     server_wide_modules = base,web
     
-    # Limits
+    # ============================================
+    # Memory Limits
+    # ============================================
+    # Hard limit: 2.5 GB per worker
     limit_memory_hard = 2684354560
+    # Soft limit: 2 GB per worker
     limit_memory_soft = 2147483648
+    
+    # ============================================
+    # Request Limits
+    # ============================================
     limit_request = 8192
     limit_time_cpu = 600
     limit_time_real = 1200
     limit_time_real_cron = 0
+    
+    # ============================================
+    # Logging Configuration
+    # ============================================
+    log_level = info
+    log_handler = :INFO
+    # For debugging, use:
+    # log_level = debug
+    # log_handler = :DEBUG
+    
+    # ============================================
+    # Session Configuration
+    # ============================================
+    # Session timeout (7 days in seconds)
+    session_timeout = 604800
+    
+    # ============================================
+    # Security Configuration
+    # ============================================
+    # List allowed database operations
+    list_db = True
+    # Disable database manager (set to False in production)
+    # list_db = False
+    
+    # ============================================
+    # Email Configuration (Optional)
+    # ============================================
+    # email_from = noreply@yourdomain.com
+    # smtp_server = smtp.gmail.com
+    # smtp_port = 587
+    # smtp_user = your-email@gmail.com
+    # smtp_password = your-password
+    # smtp_ssl = False
+    
+    # ============================================
+    # Performance Tuning
+    # ============================================
+    # Enable server-wide modules for better performance
+    # server_wide_modules = base,web
+    
+    # Disable auto-reload in production
+    # dev_mode = 
+    
+    # ============================================
+    # Localization (Optional)
+    # ============================================
+    # Default language
+    # lang = es_PE
+    # Default timezone
+    # timezone = America/Lima

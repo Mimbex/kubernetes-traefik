@@ -1,0 +1,8 @@
+# Python dependencies for custom Odoo modules
+# Add your module dependencies here
+
+# Example dependencies:
+# requests>=2.31.0
+# pandas>=2.0.0
+# openpyxl>=3.1.0
+# pillow>=10.0.0

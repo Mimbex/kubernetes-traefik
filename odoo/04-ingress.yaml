@@ -4,14 +4,30 @@ metadata:
   name: odoo-ingress
   namespace: odoo
   annotations:
+    # Traefik entrypoints
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    # Let's Encrypt SSL
     traefik.ingress.kubernetes.io/router.tls.certresolver: letsencrypt
+    # Sticky sessions (required for Odoo)
+    traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+    traefik.ingress.kubernetes.io/service.sticky.cookie.name: "odoo_session"
+    # Timeouts for longpolling
+    traefik.ingress.kubernetes.io/router.middlewares: odoo-timeout@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
     - host: ${ODOO_DOMAIN}
       http:
         paths:
+          # Longpolling path (must be first for priority)
+          - path: /longpolling
+            pathType: Prefix
+            backend:
+              service:
+                name: odoo
+                port:
+                  number: 8072
+          # Main Odoo application
           - path: /
             pathType: Prefix
             backend:
@@ -23,3 +39,17 @@ spec:
     - hosts:
         - ${ODOO_DOMAIN}
       secretName: odoo-tls
+
+---
+# Middleware for longpolling timeouts
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: odoo-timeout
+  namespace: odoo
+spec:
+  # Increase timeouts for longpolling connections
+  # Odoo longpolling can keep connections open for up to 60 seconds
+  buffering:
+    maxRequestBodyBytes: 10485760  # 10 MB
+    maxResponseBodyBytes: 10485760  # 10 MB

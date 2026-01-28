@@ -305,7 +305,57 @@ POSTGRES_VERSION=16    # Change to desired PostgreSQL version
 | 17.0         | 15 or 16               | 12                |
 | 16.0         | 14 or 15               | 12                |
 
+
 ⚠️ **Note:** Changing versions requires redeployment. Backup your data first!
+
+### Verify Longpolling (Real-Time Features)
+
+Longpolling is **critical** for real-time features like POS, chat, and notifications.
+
+**Check if longpolling is working:**
+
+```bash
+# 1. Check Odoo logs for gevent
+kubectl logs -n odoo deployment/odoo | grep -i gevent
+
+# You should see:
+# INFO ? odoo.service.server: Evented Service (longpolling) running on 0.0.0.0:8072
+```
+
+**Test longpolling endpoint:**
+
+```bash
+# From inside the cluster
+kubectl exec -it deployment/odoo -n odoo -- curl http://localhost:8072/longpolling/poll
+
+# From outside (replace with your domain)
+curl https://odoo.yourdomain.com/longpolling/poll
+```
+
+**What requires longpolling:**
+- ✅ Point of Sale (POS)
+- ✅ Live Chat
+- ✅ Discuss (internal messaging)
+- ✅ Website Live Chat
+- ✅ Real-time notifications
+- ✅ Multi-user collaboration
+
+**If longpolling is not working:**
+
+1. Check Service exposes port 8072:
+```bash
+kubectl get svc odoo -n odoo -o yaml | grep 8072
+```
+
+2. Check Ingress routes /longpolling:
+```bash
+kubectl get ingress odoo-ingress -n odoo -o yaml | grep longpolling
+```
+
+3. Check odoo.conf has gevent_port:
+```bash
+kubectl exec -it deployment/odoo -n odoo -- cat /etc/odoo/odoo.conf | grep gevent
+```
 
 ---
 

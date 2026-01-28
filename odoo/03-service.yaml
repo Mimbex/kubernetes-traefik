@@ -3,13 +3,25 @@ kind: Service
 metadata:
   name: odoo
   namespace: odoo
+  labels:
+    app: odoo
 spec:
   selector:
     app: odoo
   ports:
+    # Main HTTP port for Odoo web interface
     - name: http
       port: 8069
       targetPort: 8069
-    - name: websocket
+      protocol: TCP
+    # Longpolling port for real-time features
+    # Required for: POS, chat, notifications, live updates
+    - name: longpolling
       port: 8072
       targetPort: 8072
+      protocol: TCP
+  type: ClusterIP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800

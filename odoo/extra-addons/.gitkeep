@@ -1,0 +1,6 @@
+# Keep this directory in Git
+# This file ensures the extra-addons directory is tracked by Git
+# even when it's empty
+
+# Add your custom Odoo modules to this directory
+# See README.md for instructions
