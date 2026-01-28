@@ -56,7 +56,8 @@ spec:
               mountPath: /var/lib/odoo
       containers:
         - name: odoo
-          image: odoo:${ODOO_VERSION}
+          image: odoo:18
+          imagePullPolicy: Always
           command: ["/bin/bash", "/etc/odoo-ro/init_db.sh"]
           ports:
             - containerPort: 8069
@@ -91,6 +92,9 @@ spec:
               mountPath: /etc/odoo-ro
             - name: odoo-config
               mountPath: /usr/lib/python3/dist-packages/odoo/addons/base/data/res_lang_data.xml
+              subPath: empty.xml
+            - name: odoo-config
+              mountPath: /usr/lib/python3/dist-packages/odoo/addons/base/data/res_partner_data.xml
               subPath: empty.xml
             - name: extra-addons
               mountPath: /mnt/extra-addons
