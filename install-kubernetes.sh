@@ -112,6 +112,8 @@ EOF
     # Install kubeadm, kubelet, kubectl
     echo ""
     echo "6️⃣ Installing Kubernetes components..."
+    # Clean up old key if exists to avoid interactive prompt
+    rm -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg
     curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
     echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
     apt-get update

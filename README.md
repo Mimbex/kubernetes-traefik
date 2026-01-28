@@ -24,29 +24,33 @@ Deploy a complete Odoo ERP system (versions 16.0, 17.0, 18.0, or 19.0) in ~15 mi
 - **Root access** (for installation only)
 - **Domain name** pointing to your server (for SSL)
 
-### One-Command Installation
+### Installation in 3 Steps
 
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/kubernetes-traefik.git
-cd kubernetes-traefik
+1. **Clone & Setup Permissions:**
+   ```bash
+   git clone https://github.com/Mimbex/kubernetes-traefik.git /opt/kubernetes-traefik
+   cd /opt/kubernetes-traefik
+   chmod +x *.sh scripts/*.sh odooctl
+   ```
 
-# Make scripts executable
-chmod +x *.sh
+2. **Configure Environment (Required):**
+   You MUST set your domain and passwords before installing.
+   ```bash
+   cp .env.example .env
+   nano .env
+   ```
+   **Key variables to change:**
+   - `DOMAIN`: Your actual domain (e.g., odoo.example.com)
+   - `ACME_EMAIL`: Your email for SSL certificates
+   - `POSTGRES_PASSWORD` and `ODOO_DB_PASSWORD`: Set strong, matching passwords.
 
-# Run complete installation
-sudo ./install-everything.sh
-```
+3. **Run the Master Installer:**
+   ```bash
+   sudo ./install-everything.sh
+   ```
+   *If prompted, type `yes` to confirm.*
 
-**That's it!** ⏱️ Wait 10-15 minutes.
-
-The script will:
-1. Install Kubernetes
-2. Initialize the cluster
-3. Ask for your domain and email
-4. Deploy Odoo + PostgreSQL + Traefik
-5. Configure automated backups
-6. Install visual management tools
+**Done!** ⏱️ Wait ~5 minutes for SSL validtion, then visit `https://<YOUR_DOMAIN>`.
 
 ### 🔄 Want a Different Odoo Version?
 
