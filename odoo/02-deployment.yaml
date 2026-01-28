@@ -15,6 +15,8 @@ spec:
     spec:
       initContainers:
         - name: install-requirements
+          securityContext:
+            runAsUser: 0
           image: odoo:${ODOO_VERSION}
           command: ["/bin/bash", "-c"]
           args:
