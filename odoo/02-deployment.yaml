@@ -66,8 +66,8 @@ spec:
         - name: odoo
           image: odoo:18
           imagePullPolicy: Always
-          # Auto-init restored (safe now that DB exists)
-          command: ["/bin/bash", "/etc/odoo-ro/init_db.sh"]
+          # Manual mode: Start Odoo directly to allow Web UI creation
+          command: ["/bin/bash", "-c", "odoo -c /etc/odoo-ro/odoo.conf"]
           ports:
             - containerPort: 8069
               name: http
