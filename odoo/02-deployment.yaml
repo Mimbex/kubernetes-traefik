@@ -27,12 +27,14 @@ spec:
                 echo "✅ Dependencies installed"
               fi
               
-              # COPIAR CONFIGURACION A VOLUMEN PERSISTENTE (Para que Odoo pueda escribir el hash)
+              # COPIAR CONFIGURACION A VOLUMEN PERSISTENTE
+              echo "⚙️  Setting up writable configuration..."
               cp /etc/odoo-ro/odoo.conf /var/lib/odoo/odoo.conf
+              
               echo "Fixing permissions..."
               chown -R 101:101 /var/lib/odoo
               chmod 640 /var/lib/odoo/odoo.conf
-              # chmod 777 /var/lib/odoo/sessions # Ya no es necesario si quitamos el emptyDir y hacemos chown recursivo
+              # Las sesiones estan en /var/lib/odoo/sessions, el chown recursivo las arregla
               echo "Permissions fixed."
               
               if [ -f /mnt/oca-addons/requirements.txt ]; then
@@ -74,8 +76,7 @@ spec:
           volumeMounts:
             - name: odoo-data
               mountPath: /var/lib/odoo
-            # - name: odoo-sessions # ELIMINADO PARA USAR PERSISTENCIA
-            #   mountPath: /var/lib/odoo/sessions
+            # Sessions estan dentro de /var/lib/odoo/sessions ahora (persistencia)
             - name: odoo-config
               mountPath: /etc/odoo-ro
             - name: extra-addons
@@ -99,53 +100,9 @@ spec:
         - name: odoo-data
           persistentVolumeClaim:
             claimName: odoo-data
-        # - name: odoo-sessions # ELIMINADO
-        #   emptyDir: {}
         - name: extra-addons
           persistentVolumeClaim:
             claimName: odoo-extra-addons
         - name: oca-addons
           persistentVolumeClaim:
             claimName: odoo-oca-addons
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: odoo-data
-  namespace: odoo
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: "manual"
-  resources:
-    requests:
-      storage: 10Gi
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: odoo-extra-addons
-  namespace: odoo
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: "manual"
-  resources:
-    requests:
-      storage: 5Gi
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: odoo-oca-addons
-  namespace: odoo
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: "manual"
-  resources:
-    requests:
-      storage: 10Gi
