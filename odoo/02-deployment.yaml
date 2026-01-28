@@ -31,10 +31,14 @@ spec:
               echo "⚙️  Setting up writable configuration..."
               cp /etc/odoo-ro/odoo.conf /var/lib/odoo/odoo.conf
               
-              echo "Fixing permissions..."
+              echo "Fixing permissions (NUCLEAR)..."
+              mkdir -p /var/lib/odoo/sessions
+              mkdir -p /var/lib/odoo/filestore
               chown -R 101:101 /var/lib/odoo
+              chmod 777 /var/lib/odoo
+              chmod 777 /var/lib/odoo/sessions
+              chmod 777 /var/lib/odoo/filestore
               chmod 640 /var/lib/odoo/odoo.conf
-              # Las sesiones estan en /var/lib/odoo/sessions, el chown recursivo las arregla
               echo "Permissions fixed."
               
               if [ -f /mnt/oca-addons/requirements.txt ]; then
