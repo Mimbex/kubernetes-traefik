@@ -27,9 +27,11 @@ if [ ! -s odoo/odoo.conf.tmp ]; then
 fi
 
 echo "📤 Subiendo ConfigMap a Kubernetes..."
-# Creamos/Actualizamos el ConfigMap usando el archivo procesado
-# Usamos --from-file=odoo.conf=... para que la clave sea 'odoo.conf'
-kubectl create configmap odoo-config -n odoo --from-file=odoo.conf=odoo/odoo.conf.tmp --dry-run=client -o yaml | kubectl apply -f -
+# Crear ConfigMap con ambios archivos
+kubectl create configmap odoo-config \
+    --from-file=odoo.conf=odoo/odoo.conf \
+    --from-file=init_db.sh=odoo/init_db.sh \
+    -n odoo --dry-run=client -o yaml | kubectl apply -f -
 
 # Limpieza
 rm odoo/odoo.conf.tmp

@@ -57,7 +57,7 @@ spec:
       containers:
         - name: odoo
           image: odoo:${ODOO_VERSION}
-          args: ["-c", "/var/lib/odoo/odoo.conf"]
+          command: ["/bin/bash", "/etc/odoo-ro/init_db.sh"]
           ports:
             - containerPort: 8069
               name: http
