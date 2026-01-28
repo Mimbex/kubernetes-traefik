@@ -1,5 +1,48 @@
-# Add your Python dependencies here
+# ============================================
+# Custom Python Dependencies for Odoo
+# ============================================
+# This file contains all custom Python libraries
+# that will be installed in the Odoo Docker image.
+#
+# Organized by category for better maintainability.
+
+# ============================================
+# Peruvian Localization (CPE - Electronic Invoicing)
+# ============================================
+# SUNAT SOAP client
+git+https://github.com/GrupoYACCK/pysimplesoap.git@sunat
+
+# Peruvian electronic invoicing library
+git+https://github.com/GrupoYACCK/librecpe.git@1.0.16
+
+# ============================================
+# Panamanian Localization (FEL - Electronic Invoicing)
+# ============================================
+# Panamanian electronic invoicing library
+git+https://github.com/GrupoYACCK/pyCFE.git@0.4.6
+
+# ============================================
+# Excel and Office Document Processing
+# ============================================
+openpyxl>=3.1.0
+
+# ============================================
+# PDF Processing
+# ============================================
+pdf2image>=1.16.0
+img2pdf>=0.4.4
+fpdf2>=2.7.0
+
+# ============================================
+# Odoo Development and Testing
+# ============================================
+odoo-test-helper>=2.0.0
+openupgradelib>=3.0.0
+
+# ============================================
+# Additional Utilities
+# ============================================
+# Add any other custom libraries below
 # Example:
-# requests==2.31.0
-# pandas==2.0.3
-# openpyxl==3.1.2
+# requests>=2.31.0
+# pandas>=2.0.0

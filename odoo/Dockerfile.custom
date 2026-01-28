@@ -1,67 +1,64 @@
-FROM python:3.11-slim-bookworm
+# Odoo Custom Docker Image
+# Based on official Odoo image with custom dependencies
+# Supports Odoo 16.0, 17.0, 18.0, and 19.0
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    dirmngr \
-    fonts-noto-cjk \
-    gnupg \
-    libssl-dev \
-    node-less \
-    npm \
-    python3-num2words \
-    python3-pdfminer \
+ARG ODOO_VERSION=19.0
+FROM odoo:${ODOO_VERSION}
+
+# Switch to root to install system packages
+USER root
+
+# Install system dependencies for Peruvian/Panamanian localization
+# and other custom requirements
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    # XML and security libraries (required for electronic invoicing)
+    pkg-config \
+    libxml2-dev \
+    libxmlsec1-dev \
+    libxmlsec1-openssl \
+    # Python development tools
     python3-pip \
-    python3-phonenumbers \
-    python3-pyldap \
-    python3-qrcode \
-    python3-renderpm \
-    python3-setuptools \
-    python3-slugify \
-    python3-vobject \
-    python3-watchdog \
-    python3-xlrd \
-    python3-xlwt \
-    xz-utils \
+    python3-dev \
+    python3-wheel \
+    gcc \
+    # Utilities
     git \
-    build-essential \
-    libpq-dev \
-    libsasl2-dev \
-    libldap2-dev \
+    nano \
+    iputils-ping \
+    # QR Code support
+    python3-qrcode \
+    # XML processing
+    python3-lxml \
     && rm -rf /var/lib/apt/lists/*
 
-# Install wkhtmltopdf
-RUN curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.deb \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends ./wkhtmltox.deb \
-    && rm -rf /var/lib/apt/lists/* wkhtmltox.deb
+# Remove system xmlsec if it exists to avoid conflicts
+# Install compatible versions of critical libraries
+RUN apt-get remove -y python3-xmlsec || true && \
+    pip3 install --break-system-packages --force-reinstall --ignore-installed lxml==4.9.3 && \
+    pip3 install --break-system-packages --force-reinstall --ignore-installed xmlsec==1.3.13
 
-# Create odoo user
-RUN useradd -ms /bin/bash odoo
+# Install custom Python dependencies from requirements.txt
+# This file should contain all your custom Python libraries
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --break-system-packages -r /tmp/requirements.txt && \
+    rm /tmp/requirements.txt
 
-# Clone Odoo from specific branch
-ARG ODOO_VERSION=17.4
-RUN git clone --depth 1 --branch saas-${ODOO_VERSION} https://github.com/odoo/odoo.git /opt/odoo
+# Create directory for custom addons
+RUN mkdir -p /mnt/extra-addons && \
+    chown -R odoo:odoo /mnt/extra-addons
 
-# Install Python dependencies
-RUN pip3 install --no-cache-dir -r /opt/odoo/requirements.txt
-
-# Set permissions
-RUN chown -R odoo:odoo /opt/odoo
-
-# Create directories
-RUN mkdir -p /var/lib/odoo /mnt/extra-addons \
-    && chown -R odoo:odoo /var/lib/odoo /mnt/extra-addons
-
-# Expose Odoo services
-EXPOSE 8069 8072
-
-# Set default user
+# Switch back to odoo user for security
 USER odoo
 
-# Set environment variables
-ENV ODOO_RC=/etc/odoo/odoo.conf
+# Expose Odoo services
+# 8069: Main Odoo web interface
+# 8072: Longpolling (for real-time features)
+EXPOSE 8069 8072
 
-# Run Odoo
-CMD ["/opt/odoo/odoo-bin"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8069/web/health || exit 1
+
+# Default command (can be overridden in deployment)
+CMD ["odoo"]

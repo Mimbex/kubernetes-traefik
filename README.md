@@ -172,6 +172,51 @@ https://odoo.yourdomain.com
 - Email: `admin`
 - Password: (set during Odoo initialization)
 
+### Step 8: Custom Docker Image (Optional - For Custom Dependencies)
+
+If you need custom Python libraries or system packages (e.g., for Peruvian/Panamanian localization):
+
+**Build custom image:**
+```bash
+cd odoo
+./build-custom-image.sh 19.0
+```
+
+**Update deployment to use custom image:**
+
+Edit `odoo/02-deployment.yaml`:
+```yaml
+spec:
+  template:
+    spec:
+      containers:
+      - name: odoo
+        image: custom-odoo:19.0  # Use your custom image
+```
+
+**Apply changes:**
+```bash
+kubectl apply -f odoo/02-deployment.yaml
+kubectl rollout restart deployment odoo -n odoo
+```
+
+**What's included in the custom image:**
+- ✅ Peruvian localization (CPE - Electronic Invoicing)
+- ✅ Panamanian localization (FEL - Electronic Invoicing)
+- ✅ Excel processing (openpyxl)
+- ✅ PDF processing (pdf2image, img2pdf, fpdf2)
+- ✅ Testing tools (odoo-test-helper, openupgradelib)
+
+**Add your own dependencies:**
+
+Edit `odoo/requirements.txt`:
+```txt
+your-library==1.0.0
+git+https://github.com/user/repo.git@branch
+```
+
+See [odoo/README.md](odoo/README.md) for complete documentation.
+
 ---
 
 ## 🛠️ Common Operations

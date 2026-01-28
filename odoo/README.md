@@ -1,177 +1,184 @@
-# Odoo Configuration
+# 🐳 Custom Odoo Docker Image
 
-## 🚀 Performance Configuration
+This directory contains the configuration for building a **custom Odoo Docker image** with all your specific dependencies.
 
-This Odoo deployment is configured for **production performance** with:
+## 📦 What's Included
 
-### **Workers & Gevent**
+### System Dependencies
+- XML and security libraries (for electronic invoicing)
+- Python development tools
+- QR Code support
+- Utilities (git, nano, ping)
 
-```ini
-workers = 4                    # Multi-process mode
-max_cron_threads = 2          # Cron workers
-server_wide_modules = base,web # Enable gevent mode
+### Python Libraries
+- **Peruvian Localization (CPE)**: SUNAT SOAP client, librecpe
+- **Panamanian Localization (FEL)**: pyCFE
+- **Excel Processing**: openpyxl
+- **PDF Processing**: pdf2image, img2pdf, fpdf2
+- **Testing Tools**: odoo-test-helper, openupgradelib
+
+## 🚀 Quick Start
+
+### Option 1: Build Locally (Recommended for Development)
+
+```bash
+cd odoo
+
+# Build for Odoo 19.0 (default)
+./build-custom-image.sh
+
+# Build for specific version
+./build-custom-image.sh 18.0
+./build-custom-image.sh 17.0
+./build-custom-image.sh 16.0
 ```
 
-**Why gevent?**
-- ✅ Better concurrency for web requests
-- ✅ Non-blocking I/O
-- ✅ Handles more simultaneous users
-- ✅ Lower memory footprint per connection
+### Option 2: Use Pre-built Image (Production)
 
----
+If you have a Docker registry:
 
-## 📊 Resource Allocation
+```bash
+# Build and tag
+./build-custom-image.sh 19.0
+docker tag custom-odoo:19.0 your-registry.com/custom-odoo:19.0
 
-### **Container Resources:**
+# Push to registry
+docker push your-registry.com/custom-odoo:19.0
+```
+
+## 📝 Adding Custom Dependencies
+
+### Python Libraries
+
+Edit `requirements.txt`:
+
+```txt
+# Add your library
+your-library==1.0.0
+
+# Or from git
+git+https://github.com/user/repo.git@branch
+```
+
+### System Packages
+
+Edit `Dockerfile.custom` in the `apt-get install` section:
+
+```dockerfile
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    your-package \
+    another-package \
+    && rm -rf /var/lib/apt/lists/*
+```
+
+## 🔧 Using the Custom Image
+
+### Update Kubernetes Deployment
+
+Edit `02-deployment.yaml`:
+
 ```yaml
-requests:
-  memory: 2Gi   # Minimum guaranteed
-  cpu: 1000m    # 1 CPU core
-limits:
-  memory: 4Gi   # Maximum allowed
-  cpu: 2000m    # 2 CPU cores
+spec:
+  template:
+    spec:
+      containers:
+      - name: odoo
+        image: custom-odoo:19.0  # Use your custom image
+        # or from registry:
+        # image: your-registry.com/custom-odoo:19.0
 ```
 
-### **Memory Limits (odoo.conf):**
-```ini
-limit_memory_hard = 2684354560  # 2.5 GB per worker
-limit_memory_soft = 2147483648  # 2 GB per worker
-```
+### Rebuild and Deploy
 
-**Calculation:**
-- 4 workers × 2.5 GB = ~10 GB total (with overhead)
-- Container limit: 4 GB (Kubernetes will manage)
-
----
-
-## ⚙️ Workers Configuration
-
-### **Formula for workers:**
-```
-workers = (CPU cores × 2) + 1
-```
-
-**Examples:**
-- 1 CPU → 3 workers
-- 2 CPU → 5 workers
-- 4 CPU → 9 workers
-
-**Current setup:**
-- 2 CPU cores → 4 workers (conservative)
-
----
-
-## 🔧 Tuning for Your Environment
-
-### **Low Resources (1 CPU, 2GB RAM):**
-```ini
-workers = 2
-max_cron_threads = 1
-limit_memory_hard = 1073741824  # 1 GB
-limit_memory_soft = 805306368   # 768 MB
-```
-
-### **Medium Resources (2 CPU, 4GB RAM):**
-```ini
-workers = 4
-max_cron_threads = 2
-limit_memory_hard = 2684354560  # 2.5 GB
-limit_memory_soft = 2147483648  # 2 GB
-```
-
-### **High Resources (4 CPU, 8GB RAM):**
-```ini
-workers = 8
-max_cron_threads = 4
-limit_memory_hard = 2684354560  # 2.5 GB
-limit_memory_soft = 2147483648  # 2 GB
-```
-
----
-
-## 🎯 Gevent vs Standard Mode
-
-### **Standard Mode (workers = 0):**
-- Single process
-- Blocking I/O
-- Good for: Development, testing
-- Max users: ~10 concurrent
-
-### **Gevent Mode (workers > 0):**
-- Multi-process
-- Non-blocking I/O
-- Good for: Production
-- Max users: ~100+ concurrent (depends on resources)
-
----
-
-## 📝 Configuration Files
-
-### **01-configmap.yaml**
-Contains `odoo.conf` with all performance settings.
-
-### **02-deployment.yaml**
-Defines container resources and limits.
-
----
-
-## 🔍 Monitoring Performance
-
-### **Check worker status:**
 ```bash
-kubectl exec -n odoo deployment/odoo -- ps aux | grep odoo
+# 1. Build new image
+cd odoo
+./build-custom-image.sh 19.0
+
+# 2. Update deployment
+cd ..
+kubectl apply -f odoo/02-deployment.yaml
+
+# 3. Restart pods
+kubectl rollout restart deployment odoo -n odoo
 ```
 
-### **Check memory usage:**
+## 📊 Image Versions
+
+| Odoo Version | Base Image | Custom Image Tag |
+|--------------|------------|------------------|
+| 19.0         | odoo:19.0  | custom-odoo:19.0 |
+| 18.0         | odoo:18.0  | custom-odoo:18.0 |
+| 17.0         | odoo:17.0  | custom-odoo:17.0 |
+| 16.0         | odoo:16.0  | custom-odoo:16.0 |
+
+## 🔍 Troubleshooting
+
+### Build Fails
+
 ```bash
-kubectl top pod -n odoo
+# Check Docker is running
+docker ps
+
+# Clean build cache
+docker builder prune
+
+# Rebuild without cache
+docker build --no-cache --build-arg ODOO_VERSION=19.0 -t custom-odoo:19.0 -f Dockerfile.custom .
 ```
 
-### **Check logs:**
+### Library Conflicts
+
+If you have version conflicts:
+
+1. Check `requirements.txt` for duplicate libraries
+2. Pin specific versions: `library==1.2.3`
+3. Use `--force-reinstall` in Dockerfile if needed
+
+### Image Too Large
+
 ```bash
-kubectl logs -n odoo deployment/odoo -f
+# Check image size
+docker images | grep custom-odoo
+
+# Reduce size:
+# 1. Remove unnecessary packages
+# 2. Use multi-stage builds
+# 3. Clean apt cache (already done)
 ```
 
-### **Check if gevent is active:**
-```bash
-kubectl logs -n odoo deployment/odoo | grep -i gevent
+## 📚 File Structure
+
+```
+odoo/
+├── Dockerfile.custom       # Custom image definition
+├── requirements.txt        # Python dependencies
+├── build-custom-image.sh   # Build script
+├── 00-namespace.yaml       # Kubernetes namespace
+├── 01-configmap.yaml       # Odoo configuration
+├── 02-deployment.yaml      # Kubernetes deployment
+├── 03-service.yaml         # Kubernetes service
+├── 04-ingress.yaml         # Traefik ingress
+└── README.md               # This file
 ```
 
-You should see:
-```
-INFO ? odoo.service.server: Evented Service (longpolling) running on ...
-```
+## 🎯 Best Practices
+
+1. **Version Pin**: Always pin library versions in `requirements.txt`
+2. **Test Locally**: Build and test image locally before deploying
+3. **Use Registry**: Push to a registry for production
+4. **Tag Properly**: Use semantic versioning (e.g., `custom-odoo:19.0-v1.2.3`)
+5. **Document Changes**: Update this README when adding dependencies
+6. **Security**: Regularly update base image and dependencies
+
+## 🔗 Related Documentation
+
+- [Main README](../README.md) - Complete project documentation
+- [Odoo Performance](./odoo/README.md) - Performance tuning guide
+- [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)
 
 ---
 
-## ⚠️ Important Notes
-
-1. **Workers = 0** disables multi-processing (dev mode)
-2. **Workers > 0** enables production mode with gevent
-3. **Gevent requires** `server_wide_modules = base,web`
-4. **Memory limits** prevent OOM kills
-5. **CPU limits** prevent resource starvation
-
----
-
-## 🆘 Troubleshooting
-
-### **Pod keeps restarting (OOMKilled):**
-- Reduce `workers` or increase memory limits
-- Check: `kubectl describe pod -n odoo`
-
-### **Slow performance:**
-- Increase `workers` if you have CPU available
-- Check: `kubectl top pod -n odoo`
-
-### **Database connection errors:**
-- Check PostgreSQL is running
-- Verify connection string in configmap
-
----
-
-## 📚 References
-
-- [Odoo Performance Documentation](https://www.odoo.com/documentation/17.0/administration/install/deploy.html)
-- [Gevent Documentation](http://www.gevent.org/)
-- [Kubernetes Resource Management](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
+**Custom Odoo Image for Kubernetes**
+© 2025 Dustin Mimbela
