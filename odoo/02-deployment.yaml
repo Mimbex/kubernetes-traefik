@@ -23,9 +23,13 @@ spec:
                 echo "📦 Installing Python dependencies from requirements.txt..."
                 pip3 install --no-cache-dir -r /mnt/extra-addons/requirements.txt
                 echo "✅ Dependencies installed"
-              else
-                echo "ℹ️  No requirements.txt found in extra-addons, skipping..."
               fi
+              
+              # COPIAR CONFIGURACION A VOLUMEN PERSISTENTE (Para que Odoo pueda escribir el hash)
+              echo "⚙️  Setting up writable configuration..."
+              cp /etc/odoo-ro/odoo.conf /var/lib/odoo/odoo.conf
+              chown -R 101:101 /var/lib/odoo  # 101 es el UID de odoo
+              chmod 640 /var/lib/odoo/odoo.conf
               
               if [ -f /mnt/oca-addons/requirements.txt ]; then
                 echo "📦 Installing OCA dependencies..."
@@ -36,11 +40,14 @@ spec:
               mountPath: /mnt/extra-addons
             - name: oca-addons
               mountPath: /mnt/oca-addons
+            - name: odoo-config
+              mountPath: /etc/odoo-ro
+            - name: odoo-data
+              mountPath: /var/lib/odoo
       containers:
         - name: odoo
           image: odoo:${ODOO_VERSION}
-          command: ["odoo"]
-          args: ["-c", "/etc/odoo/odoo.conf"]
+          args: ["-c", "/var/lib/odoo/odoo.conf"]
           ports:
             - containerPort: 8069
               name: http
@@ -66,7 +73,7 @@ spec:
             - name: odoo-sessions
               mountPath: /var/lib/odoo/sessions
             - name: odoo-config
-              mountPath: /etc/odoo
+              mountPath: /etc/odoo-ro
             - name: extra-addons
               mountPath: /mnt/extra-addons
             - name: oca-addons
