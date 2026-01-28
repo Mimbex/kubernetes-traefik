@@ -110,6 +110,7 @@ kubectl wait --for=condition=ready --timeout=300s pod -l app=postgresql -n postg
 # Deploy Odoo
 echo "📦 Deploying Odoo..."
 kubectl apply -f odoo/00-namespace.yaml
+kubectl apply -f odoo/01-pvc.yaml
 envsubst < odoo/01-configmap.yaml | kubectl apply -f -
 envsubst < odoo/02-deployment.yaml | kubectl apply -f -
 kubectl apply -f odoo/03-service.yaml
