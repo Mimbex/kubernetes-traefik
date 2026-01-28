@@ -10,7 +10,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: "manual"
   hostPath:
-    path: /opt/odoo-data
+    path: /srv/odoo-data/filestore
     type: DirectoryOrCreate
 ---
 apiVersion: v1
@@ -25,5 +25,5 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: "manual"
   hostPath:
-    path: /opt/odoo-extra-addons
+    path: /srv/odoo-data/addons
     type: DirectoryOrCreate
