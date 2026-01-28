@@ -15,7 +15,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: ${ODOO_DOMAIN}
+    - host: ${DOMAIN}
       http:
         paths:
           # Longpolling path (must be first for priority)
