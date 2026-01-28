@@ -70,6 +70,12 @@ spec:
               value: odoo
             - name: PASSWORD
               value: odoo
+            - name: LANG
+              value: C.UTF-8
+            - name: LC_ALL
+              value: C.UTF-8
+            - name: PYTHONIOENCODING
+              value: utf-8
           resources:
             requests:
               memory: "512Mi"
