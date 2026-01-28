@@ -39,6 +39,8 @@ spec:
       containers:
         - name: odoo
           image: odoo:${ODOO_VERSION}
+          command: ["odoo"]
+          args: ["-c", "/etc/odoo/odoo.conf"]
           ports:
             - containerPort: 8069
               name: http
