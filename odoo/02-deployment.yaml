@@ -72,10 +72,10 @@ spec:
               value: odoo
           resources:
             requests:
-              memory: "1Gi"
-              cpu: "500m"
+              memory: "512Mi"
+              cpu: "150m"
             limits:
-              memory: "2Gi"
+              memory: "2560Mi"
               cpu: "1000m"
           volumeMounts:
             - name: odoo-data
@@ -90,8 +90,8 @@ spec:
           livenessProbe:
             tcpSocket:
               port: 8069
-            initialDelaySeconds: 120
-            periodSeconds: 30
+            initialDelaySeconds: 600
+            periodSeconds: 60
           readinessProbe:
             tcpSocket:
               port: 8069
