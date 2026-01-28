@@ -1,8 +1,342 @@
-# Kubernetes + Traefik + Odoo 19 + PostgreSQL
+# 🚀 Kubernetes + Traefik + Odoo 19
 
-Production-ready Kubernetes deployment with Traefik Ingress Controller, automatic SSL certificates with Let's Encrypt, PostgreSQL 17, and Odoo 19.
+**Production-ready Kubernetes deployment with automatic SSL, PostgreSQL 17, and Odoo 19.**
 
-## 📋 Project Structure
+Deploy a complete Odoo ERP system in ~15 minutes with one command.
+
+---
+
+## ✨ What You Get
+
+- ✅ **Kubernetes cluster** (production-ready)
+- ✅ **Odoo 19** (latest ERP system)
+- ✅ **PostgreSQL 17** (robust database)
+- ✅ **Traefik** (automatic SSL with Let's Encrypt)
+- ✅ **Automated daily backups** (7-day retention)
+- ✅ **Visual management tools** (k9s + Kubernetes Dashboard)
+
+---
+
+## 🎯 Quick Install (Recommended)
+
+### Prerequisites
+- **Linux server** (Ubuntu/Debian/CentOS/RHEL) or **macOS** with Docker Desktop
+- **Root access** (for installation only)
+- **Domain name** pointing to your server (for SSL)
+
+### One-Command Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/kubernetes-traefik.git
+cd kubernetes-traefik
+
+# Make scripts executable
+chmod +x *.sh
+
+# Run complete installation
+sudo ./install-everything.sh
+```
+
+**That's it!** ⏱️ Wait 10-15 minutes.
+
+The script will:
+1. Install Kubernetes
+2. Initialize the cluster
+3. Ask for your domain and email
+4. Deploy Odoo + PostgreSQL + Traefik
+5. Configure automated backups
+6. Install visual management tools
+
+---
+
+## 📋 Manual Installation (Step by Step)
+
+If you prefer to understand each step or already have Kubernetes installed:
+
+### Step 1: Install Kubernetes
+
+**On Linux (Ubuntu/Debian/CentOS/RHEL):**
+```bash
+chmod +x install-kubernetes.sh
+sudo ./install-kubernetes.sh
+```
+
+**On macOS:**
+```bash
+# Install via Homebrew
+brew install kubectl minikube
+
+# Or enable Kubernetes in Docker Desktop Settings
+```
+
+**Verify installation:**
+```bash
+kubectl version --client
+```
+
+### Step 2: Initialize Kubernetes Cluster
+
+```bash
+chmod +x setup-cluster.sh
+sudo ./setup-cluster.sh
+```
+
+**Verify cluster is running:**
+```bash
+kubectl cluster-info
+kubectl get nodes
+```
+
+### Step 3: Configure Environment
+
+```bash
+# Copy configuration template
+cp .env.example .env
+
+# Edit configuration
+nano .env
+```
+
+**Required changes:**
+```env
+ODOO_DOMAIN=odoo.yourdomain.com          # Your domain
+LETSENCRYPT_EMAIL=your-email@example.com # Your email for SSL
+POSTGRES_PASSWORD=change_this_password   # Secure password
+ODOO_ADMIN_PASSWD=change_this_too        # Odoo master password
+```
+
+### Step 4: Deploy Odoo Stack
+
+```bash
+./scripts/deploy-all.sh
+```
+
+This deploys:
+- Traefik (ingress controller with SSL)
+- PostgreSQL 17 (database)
+- Odoo 19 (ERP system)
+
+**Wait for pods to be ready:**
+```bash
+kubectl get pods --all-namespaces
+```
+
+All pods should show `STATUS: Running`.
+
+### Step 5: Setup Automated Backups (Optional but Recommended)
+
+```bash
+./scripts/setup-backups.sh
+```
+
+This configures:
+- Daily backups at 2:00 AM UTC
+- 7-day retention policy
+- 50GB backup storage
+- Complete backups (database + filestore)
+
+### Step 6: Configure DNS
+
+**Get your LoadBalancer IP:**
+```bash
+kubectl get svc traefik -n traefik
+```
+
+**Point your domain to the EXTERNAL-IP:**
+```
+A Record: odoo.yourdomain.com → EXTERNAL-IP
+```
+
+### Step 7: Access Odoo
+
+Wait 2-3 minutes for SSL certificate generation, then access:
+```
+https://odoo.yourdomain.com
+```
+
+**Default credentials:**
+- Database: `postgres`
+- Email: `admin`
+- Password: (set during Odoo initialization)
+
+---
+
+## 🛠️ Common Operations
+
+### View Logs
+
+```bash
+# Odoo logs
+kubectl logs -n odoo -l app=odoo -f
+
+# PostgreSQL logs
+kubectl logs -n postgresql -l app=postgresql -f
+
+# Traefik logs
+kubectl logs -n traefik -l app=traefik -f
+```
+
+### Scale Odoo
+
+```bash
+# Scale to 3 replicas
+kubectl scale deployment odoo -n odoo --replicas=3
+
+# Verify
+kubectl get pods -n odoo
+```
+
+### Restart Odoo
+
+```bash
+./restart-odoo.sh
+```
+
+### Manual Backup
+
+```bash
+./scripts/backup-now.sh
+```
+
+### List Backups
+
+```bash
+./scripts/list-backups.sh
+```
+
+### Restore from Backup
+
+```bash
+./scripts/restore-backup.sh 20251017_020000.tar.gz
+```
+
+⚠️ **Warning:** This will overwrite your current database!
+
+### Update Odoo Version
+
+Edit `.env`:
+```env
+ODOO_VERSION=19.0  # Change to desired version
+```
+
+Then reload:
+```bash
+./reload-config.sh
+```
+
+---
+
+## 📊 Monitoring & Management
+
+### Visual Tools
+
+**k9s (Terminal UI):**
+```bash
+k9s
+```
+
+**Kubernetes Dashboard (Web UI):**
+```bash
+./scripts/open-dashboard.sh
+```
+
+### Check Resource Usage
+
+```bash
+kubectl top pods -n odoo
+kubectl top pods -n postgresql
+kubectl top nodes
+```
+
+### Check Cluster Status
+
+```bash
+# All resources
+kubectl get all --all-namespaces
+
+# Specific namespace
+kubectl get all -n odoo
+
+# Ingress status
+kubectl get ingress -n odoo
+kubectl describe ingress odoo-ingress -n odoo
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Pods Not Starting
+
+```bash
+# Check pod status
+kubectl get pods -n odoo
+
+# Describe pod (shows events and errors)
+kubectl describe pod <pod-name> -n odoo
+
+# Check logs
+kubectl logs <pod-name> -n odoo
+```
+
+### SSL Certificate Not Issued
+
+```bash
+# Check Traefik logs for ACME errors
+kubectl logs -n traefik -l app=traefik | grep acme
+
+# Verify ingress configuration
+kubectl describe ingress odoo-ingress -n odoo
+
+# Common issues:
+# - DNS not pointing to LoadBalancer IP
+# - Port 80/443 not accessible
+# - Let's Encrypt rate limit (50 certs/week per domain)
+```
+
+### Odoo Can't Connect to PostgreSQL
+
+```bash
+# Check PostgreSQL service
+kubectl get svc -n postgresql
+
+# Test connection from Odoo pod
+kubectl exec -it <odoo-pod> -n odoo -- \
+  psql -h postgresql.postgresql.svc.cluster.local -U odoo -d postgres
+
+# Check PostgreSQL logs
+kubectl logs -n postgresql -l app=postgresql
+```
+
+### Storage Issues
+
+```bash
+# Check persistent volumes
+kubectl get pv
+kubectl get pvc -n odoo
+kubectl get pvc -n postgresql
+
+# Check storage usage
+kubectl exec -n odoo <odoo-pod> -- df -h
+```
+
+### Backup Job Failed
+
+```bash
+# Check CronJob status
+kubectl get cronjob -n backups
+
+# View recent jobs
+kubectl get jobs -n backups
+
+# Check logs
+kubectl logs -n backups -l job-name=odoo-backup --tail=100
+```
+
+---
+
+## 📁 Project Structure
 
 ```
 kubernetes-traefik/
@@ -26,317 +360,332 @@ kubernetes-traefik/
 │   ├── 04-deployment.yaml
 │   ├── 05-service.yaml
 │   └── 06-ingress.yaml
+├── backups/              # Backup CronJob
+│   ├── 00-namespace.yaml
+│   ├── 01-pvc.yaml
+│   ├── 02-backup-script.yaml
+│   └── 03-cronjob.yaml
 ├── scripts/              # Management scripts
 │   ├── deploy-all.sh
 │   ├── delete-all.sh
-│   └── update-odoo.sh
-└── README.md
+│   ├── setup-backups.sh
+│   ├── backup-now.sh
+│   ├── list-backups.sh
+│   └── restore-backup.sh
+├── install-everything.sh # One-command installer
+├── install-kubernetes.sh # Kubernetes installer
+├── setup-cluster.sh      # Cluster initialization
+└── .env.example          # Configuration template
 ```
-
-## 🚀 Prerequisites
-
-### Option 1: Install Kubernetes on Linux Server
-
-**Production installation script (Ubuntu/Debian/CentOS/RHEL):**
-```bash
-chmod +x install-kubernetes.sh
-sudo ./install-kubernetes.sh
-```
-
-This will install kubeadm, kubelet, kubectl, and containerd.
-
-See [INSTALL.md](INSTALL.md) for detailed installation guide.
-
-**For local development on macOS:** Use Docker Desktop with Kubernetes enabled.
-
-### Option 2: Use existing cluster
-
-- Kubernetes cluster (1.24+)
-- kubectl configured
-- Domain pointing to your cluster
-- Ports 80 and 443 accessible
-
-## 📦 Super Simple Installation (Recommended)
-
-### Step 1: Install Kubernetes + Dashboard
-
-**Install Kubernetes with visual tools:**
-
-```bash
-chmod +x install-kubernetes-complete.sh
-sudo ./install-kubernetes-complete.sh
-```
-
-This script installs:
-1. ✅ Kubernetes cluster
-2. ✅ Network configuration
-3. ✅ k9s (Terminal UI)
-4. ✅ Kubernetes Dashboard (Web UI)
-
-⏱️ Takes 5-8 minutes.
-
-### Step 2: Deploy Odoo + Backups
-
-**Deploy Odoo stack:**
-
-```bash
-chmod +x install-odoo.sh
-./install-odoo.sh
-```
-
-This script installs:
-1. ✅ Odoo 19
-2. ✅ PostgreSQL 17
-3. ✅ Traefik with SSL
-4. ✅ Automated backups
-
-⏱️ Takes 5-7 minutes.
 
 ---
 
-## 📦 Manual Installation (Advanced)
+## ⚙️ Configuration Reference
 
-### 1. Clone the repository
+### Environment Variables (.env)
 
-```bash
-git clone https://github.com/yourusername/kubernetes-traefik.git
-cd kubernetes-traefik
+```env
+# Odoo Configuration
+ODOO_DOMAIN=odoo.yourdomain.com
+ODOO_VERSION=19.0                    # Options: 19.0, 18.0, 17.0
+ODOO_REPLICAS=1                      # Number of Odoo pods
+ODOO_ADMIN_PASSWD=master_password    # Odoo master password
+
+# PostgreSQL Configuration
+POSTGRES_VERSION=17
+POSTGRES_USER=odoo
+POSTGRES_PASSWORD=secure_password
+POSTGRES_DB=postgres
+
+# Let's Encrypt SSL
+LETSENCRYPT_EMAIL=your-email@example.com
+
+# Storage
+ODOO_DATA_SIZE=20Gi                  # Odoo filestore size
+POSTGRES_DATA_SIZE=10Gi              # PostgreSQL data size
+
+# Backup Configuration
+BACKUP_RETENTION_DAYS=7
+BACKUP_SCHEDULE="0 2 * * *"          # Daily at 2:00 AM UTC
 ```
 
-### 2. Install Kubernetes
+### Backup Schedule Examples
 
-```bash
-chmod +x install-kubernetes.sh
-sudo ./install-kubernetes.sh
+```yaml
+# Every 6 hours
+BACKUP_SCHEDULE="0 */6 * * *"
+
+# Every 12 hours
+BACKUP_SCHEDULE="0 */12 * * *"
+
+# Daily at 3 AM
+BACKUP_SCHEDULE="0 3 * * *"
+
+# Weekly on Sunday at 2 AM
+BACKUP_SCHEDULE="0 2 * * 0"
 ```
 
-### 3. Setup cluster
+### Resource Limits
 
-```bash
-chmod +x setup-cluster.sh
-sudo ./setup-cluster.sh
+Edit `odoo/04-deployment.yaml`:
+```yaml
+resources:
+  requests:
+    memory: "1Gi"
+    cpu: "500m"
+  limits:
+    memory: "2Gi"
+    cpu: "1000m"
 ```
 
-### 4. Configure environment
-
-```bash
-cp .env.example .env
-nano .env  # Edit your domain and email
-```
-
-### 5. Deploy Odoo
-
-```bash
-./scripts/deploy-all.sh
-```
-
-### 4. Setup Automated Backups (Optional but Recommended)
-
-```bash
-./scripts/setup-backups.sh
-```
-
-This will configure:
-- Daily backups at 2:00 AM UTC
-- 7-day retention policy
-- 50GB backup storage
-
-See [BACKUPS.md](BACKUPS.md) for full documentation.
-
-### 5. Check deployment status
-
-```bash
-kubectl get pods -n traefik
-kubectl get pods -n postgresql
-kubectl get pods -n odoo
-kubectl get cronjob -n backups  # If backups are enabled
-```
-
-## 🌐 Access Services
-
-- **Odoo**: `https://odoo.yourdomain.com`
-- **Traefik Dashboard**: `https://traefik.yourdomain.com` (if enabled)
-
-## ⚙️ Configuration
-
-### PostgreSQL
-
-- **Namespace**: `postgresql`
-- **Storage**: 10Gi PersistentVolume
-- **Version**: PostgreSQL 17
-- **Service**: `postgresql.postgresql.svc.cluster.local:5432`
-
-### Odoo
-
-- **Namespace**: `odoo`
-- **Replicas**: 1 (can be scaled)
-- **Storage**: 10Gi for filestore
-- **Version**: Odoo 19
-
-### Traefik
-
-- **Namespace**: `traefik`
-- **Type**: LoadBalancer
-- **Ports**: 80 (HTTP), 443 (HTTPS)
-- **SSL**: Automatic with Let's Encrypt
-
-## 🛠️ Management Scripts
-
-### Deployment
-
-- `deploy-all.sh` - Deploy all services
-- `delete-all.sh` - Delete all resources
-- `update-odoo.sh` - Update Odoo deployment
-
-### Backups
-
-- `setup-backups.sh` - Configure automated backups
-- `backup-now.sh` - Run manual backup
-- `list-backups.sh` - List available backups
-- `restore-backup.sh` - Restore from backup
-
-See [BACKUPS.md](BACKUPS.md) for detailed backup documentation.
-
-## 🔧 Management Commands
-
-### Deploy all services
-
-```bash
-./scripts/deploy-all.sh
-```
-
-### Delete all services
-
-```bash
-./scripts/delete-all.sh
-```
-
-### Update Odoo
-
-```bash
-./scripts/update-odoo.sh
-```
-
-### View logs
-
-```bash
-# Traefik logs
-kubectl logs -n traefik -l app=traefik -f
-
-# PostgreSQL logs
-kubectl logs -n postgresql -l app=postgresql -f
-
-# Odoo logs
-kubectl logs -n odoo -l app=odoo -f
-```
-
-### Scale Odoo
-
-```bash
-kubectl scale deployment odoo -n odoo --replicas=3
-```
+---
 
 ## 🔒 Security Best Practices
 
-1. **Change default passwords** in secret files
-2. **Use strong passwords** for PostgreSQL
-3. **Enable Traefik dashboard authentication** (basic auth)
-4. **Use NetworkPolicies** to restrict traffic
-5. **Enable RBAC** for fine-grained access control
-6. **Regular backups** of PostgreSQL data
+1. **Change default passwords** in `.env` before deployment
+2. **Use strong passwords** (minimum 16 characters)
+3. **Restrict SSH access** to your server
+4. **Enable firewall** (allow only 80, 443, and SSH)
+5. **Regular backups** and test restore procedures
+6. **Update regularly** (Kubernetes, Odoo, PostgreSQL)
+7. **Monitor logs** for suspicious activity
+8. **Use NetworkPolicies** to restrict pod communication
+9. **Enable RBAC** for fine-grained access control
+10. **Encrypt backups** if storing offsite
 
-## 📊 Monitoring
+### Enable Traefik Dashboard Authentication
 
-### Check resource usage
-
-```bash
-kubectl top pods -n odoo
-kubectl top pods -n postgresql
-kubectl top pods -n traefik
+Edit `traefik/03-deployment.yaml`:
+```yaml
+- --api.dashboard=true
+- --api.insecure=false  # Disable insecure access
 ```
 
-### Check ingress status
-
+Create basic auth:
 ```bash
-kubectl get ingress -n odoo
-kubectl describe ingress odoo-ingress -n odoo
+htpasswd -nb admin your_password | base64
 ```
 
-## 🐛 Troubleshooting
-
-### Pods not starting
-
-```bash
-kubectl describe pod <pod-name> -n <namespace>
-kubectl logs <pod-name> -n <namespace>
-```
-
-### SSL certificate not issued
-
-```bash
-kubectl logs -n traefik -l app=traefik | grep acme
-```
-
-### Odoo can't connect to PostgreSQL
-
-```bash
-# Check PostgreSQL service
-kubectl get svc -n postgresql
-
-# Test connection from Odoo pod
-kubectl exec -it <odoo-pod> -n odoo -- psql -h postgresql.postgresql.svc.cluster.local -U odoo
-```
-
-### Storage issues
-
-```bash
-kubectl get pv
-kubectl get pvc -n odoo
-kubectl get pvc -n postgresql
-```
-
-## 📝 Important Notes
-
-1. **DNS**: Ensure your domain points to the LoadBalancer IP
-2. **Storage**: Configure StorageClass according to your cloud provider
-3. **Backups**: Implement regular PostgreSQL backups
-4. **Scaling**: Odoo filestore must be shared when scaling (use NFS or S3)
-5. **Let's Encrypt**: Rate limit of 50 certificates per domain per week
-
-## 🔄 Updates
-
-### Update Odoo image
-
-```bash
-# Edit odoo/04-deployment.yaml and change image version
-kubectl apply -f odoo/04-deployment.yaml
-kubectl rollout status deployment odoo -n odoo
-```
-
-### Rollback deployment
-
-```bash
-kubectl rollout undo deployment odoo -n odoo
-```
-
-## 📚 Documentation
-
-- [QUICKSTART.md](QUICKSTART.md) - Quick start guide
-- [CONFIGURATION.md](CONFIGURATION.md) - Configuration guide
-- [BACKUPS.md](BACKUPS.md) - Backup & restore guide
-
-## 🔗 External Resources
-
-- [Traefik Documentation](https://doc.traefik.io/traefik/)
-- [Kubernetes Documentation](https://kubernetes.io/docs/)
-- [Odoo Documentation](https://www.odoo.com/documentation/)
-- [PostgreSQL on Kubernetes](https://www.postgresql.org/docs/)
-
-## 📧 Support
-
-For issues or questions, contact: dmimbela@nlcode.com
+Add to Traefik middleware.
 
 ---
 
-**Production-ready Kubernetes deployment for Odoo 19**
+## 📦 Backup System Details
+
+### What Gets Backed Up
+
+Each backup (`YYYYMMDD_HHMMSS_complete.tar.gz`) includes:
+
+1. **PostgreSQL Database** - Full dump using `pg_dump`
+2. **Odoo Filestore** - All attachments, images, documents
+3. **Odoo Sessions** - Active user sessions (optional)
+4. **Manifest** - Backup metadata and information
+
+### Backup Contents
+
+```
+20251017_020000_complete.tar.gz
+├── database.dump          # PostgreSQL database
+├── filestore.tar.gz       # Odoo filestore
+├── sessions.tar.gz        # User sessions
+└── manifest.txt           # Backup metadata
+```
+
+### Backup to Cloud Storage
+
+**AWS S3:**
+```bash
+# Add to backup script
+aws s3 cp ${TIMESTAMP}.tar.gz s3://your-bucket/odoo-backups/
+```
+
+**Google Cloud Storage:**
+```bash
+# Add to backup script
+gsutil cp ${TIMESTAMP}.tar.gz gs://your-bucket/odoo-backups/
+```
+
+---
+
+## 🌐 Deployment Options
+
+### Local Development (minikube)
+
+```bash
+# Start minikube
+minikube start
+
+# Deploy
+./scripts/deploy-all.sh
+
+# Access Odoo
+minikube service odoo -n odoo
+```
+
+### Cloud Providers
+
+#### Google Kubernetes Engine (GKE)
+
+```bash
+# Create cluster
+gcloud container clusters create odoo-cluster \
+  --num-nodes=3 \
+  --machine-type=n1-standard-2
+
+# Get credentials
+gcloud container clusters get-credentials odoo-cluster
+
+# Deploy
+./scripts/deploy-all.sh
+```
+
+#### Amazon EKS
+
+```bash
+# Create cluster
+eksctl create cluster \
+  --name odoo-cluster \
+  --region us-west-2 \
+  --nodes 3
+
+# Deploy
+./scripts/deploy-all.sh
+```
+
+#### DigitalOcean Kubernetes
+
+```bash
+# Create cluster
+doctl kubernetes cluster create odoo-cluster \
+  --count 3 \
+  --size s-2vcpu-4gb
+
+# Get credentials
+doctl kubernetes cluster kubeconfig save odoo-cluster
+
+# Deploy
+./scripts/deploy-all.sh
+```
+
+---
+
+## 🚀 Advanced Operations
+
+### Multi-Region Deployment
+
+For high availability across regions, deploy to multiple clusters and use a global load balancer.
+
+### Custom Odoo Addons
+
+1. Create a custom Docker image with your addons
+2. Update `ODOO_VERSION` in `.env` to your custom image
+3. Redeploy: `./reload-config.sh`
+
+### Monitoring with Prometheus + Grafana
+
+```bash
+# Install Prometheus Operator
+kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml
+
+# Install Grafana
+kubectl apply -f monitoring/grafana.yaml
+```
+
+### CI/CD Integration
+
+Use GitHub Actions, GitLab CI, or Jenkins to automate deployments:
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy to Kubernetes
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy
+        run: ./scripts/deploy-all.sh
+```
+
+---
+
+## 📚 Useful Commands Cheat Sheet
+
+```bash
+# Cluster Management
+kubectl cluster-info                    # Cluster info
+kubectl get nodes                       # List nodes
+kubectl top nodes                       # Node resource usage
+
+# Pod Management
+kubectl get pods -A                     # All pods
+kubectl get pods -n odoo                # Odoo pods
+kubectl describe pod <pod> -n odoo      # Pod details
+kubectl logs <pod> -n odoo -f           # Follow logs
+kubectl exec -it <pod> -n odoo -- bash  # Shell access
+
+# Service Management
+kubectl get svc -A                      # All services
+kubectl get ingress -A                  # All ingresses
+
+# Deployment Management
+kubectl scale deployment odoo -n odoo --replicas=3  # Scale
+kubectl rollout restart deployment odoo -n odoo     # Restart
+kubectl rollout status deployment odoo -n odoo      # Status
+kubectl rollout undo deployment odoo -n odoo        # Rollback
+
+# Storage Management
+kubectl get pv                          # Persistent volumes
+kubectl get pvc -A                      # Persistent volume claims
+
+# Backup Management
+kubectl get cronjob -n backups          # Backup schedule
+kubectl get jobs -n backups             # Backup jobs
+./scripts/backup-now.sh                 # Manual backup
+./scripts/list-backups.sh               # List backups
+./scripts/restore-backup.sh <file>      # Restore
+
+# Cleanup
+./scripts/delete-all.sh                 # Delete all resources
+kubectl delete namespace <namespace>    # Delete namespace
+```
+
+---
+
+## 🆘 Getting Help
+
+- **Email**: dmimbela@nlcode.com
+- **Issues**: Create a GitHub issue
+- **Documentation**: This README (you're reading it!)
+
+---
+
+## 📖 External Resources
+
+- [Kubernetes Documentation](https://kubernetes.io/docs/)
+- [Traefik Documentation](https://doc.traefik.io/traefik/)
+- [Odoo Documentation](https://www.odoo.com/documentation/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+
+---
+
+## 📝 License
+
 © 2025 Dustin Mimbela
+
+---
+
+## 🎉 You're All Set!
+
+Your production-ready Odoo system is now running on Kubernetes with automatic SSL and daily backups.
+
+**Next steps:**
+1. Configure your Odoo instance
+2. Install custom addons
+3. Set up your company data
+4. Train your team
+
+**Happy Odoo!** 🚀
