@@ -16,7 +16,7 @@ data:
     db_password = ${POSTGRES_PASSWORD}
     db_name = False
     db_template = template0
-    dbfilter = ^%d$
+    # dbfilter = ^%d$
     
     # ============================================
     # Addons Configuration
@@ -43,7 +43,8 @@ data:
     # ============================================
     # Formula: workers = (CPU cores × 2) + 1
     # For 2 CPUs: 4 workers is optimal
-    workers = 4
+    # workers = 0 for installation stability
+    workers = 0
     max_cron_threads = 2
     
     # Gevent mode for better concurrency and longpolling

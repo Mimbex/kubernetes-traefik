@@ -120,8 +120,6 @@ spec:
             items:
             - key: odoo.conf
               path: odoo.conf
-            - key: init_db.sh
-              path: init_db.sh
         - name: odoo-data
           persistentVolumeClaim:
             claimName: odoo-data
