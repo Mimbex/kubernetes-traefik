@@ -14,46 +14,6 @@ spec:
         app: odoo
     spec:
       initContainers:
-        - name: install-requirements
-          securityContext:
-            runAsUser: 0
-          image: odoo:${ODOO_VERSION}
-          command: ["/bin/bash", "-c"]
-          args:
-            - |
-              if [ -f /mnt/extra-addons/requirements.txt ]; then
-                echo "📦 Installing Python dependencies from requirements.txt..."
-                pip3 install --no-cache-dir -r /mnt/extra-addons/requirements.txt
-                echo "✅ Dependencies installed"
-              fi
-              
-              # COPIAR CONFIGURACION A VOLUMEN PERSISTENTE
-              echo "⚙️  Setting up writable configuration..."
-              cp /etc/odoo-ro/odoo.conf /var/lib/odoo/odoo.conf
-              
-              echo "Fixing permissions (NUCLEAR)..."
-              mkdir -p /var/lib/odoo/sessions
-              mkdir -p /var/lib/odoo/filestore
-              chown -R 101:101 /var/lib/odoo
-              chmod 777 /var/lib/odoo
-              chmod 777 /var/lib/odoo/sessions
-              chmod 777 /var/lib/odoo/filestore
-              chmod 640 /var/lib/odoo/odoo.conf
-              echo "Permissions fixed."
-              
-              if [ -f /mnt/oca-addons/requirements.txt ]; then
-                echo "📦 Installing OCA dependencies..."
-                pip3 install --no-cache-dir -r /mnt/oca-addons/requirements.txt
-              fi
-          volumeMounts:
-            - name: extra-addons
-              mountPath: /mnt/extra-addons
-            - name: oca-addons
-              mountPath: /mnt/oca-addons
-            - name: odoo-config
-              mountPath: /etc/odoo-ro
-            - name: odoo-data
-      initContainers:
         - name: fix-permissions
           image: busybox
           command: ["sh", "-c", "chmod -R 777 /var/lib/odoo /mnt/extra-addons /mnt/oca-addons && chown -R 101:101 /var/lib/odoo /mnt/extra-addons /mnt/oca-addons || true"]
@@ -70,8 +30,16 @@ spec:
         - name: odoo
           image: odoo:19
           imagePullPolicy: Always
-          # Manual mode: Start Odoo directly to allow Web UI creation
-          command: ["/bin/bash", "-c", "odoo -c /etc/odoo-ro/odoo.conf"]
+          # Install requirements on startup (same container) then start Odoo
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              if [ -f /mnt/extra-addons/requirements.txt ]; then
+                echo "📦 Installing custom requirements..."
+                pip3 install --no-cache-dir --break-system-packages -r /mnt/extra-addons/requirements.txt
+              fi
+              echo "🚀 Starting Odoo..."
+              odoo -c /etc/odoo-ro/odoo.conf
           ports:
             - containerPort: 8069
               name: http
