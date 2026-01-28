@@ -21,7 +21,7 @@ data:
     # ============================================
     # Addons Configuration
     # ============================================
-    addons_path = /usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
+    addons_path = /usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons,/mnt/oca-addons
     data_dir = /var/lib/odoo
     
     # ============================================

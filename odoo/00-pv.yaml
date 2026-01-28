@@ -27,3 +27,18 @@ spec:
   hostPath:
     path: /opt/extra-addons
     type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: odoo-oca-addons-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: "manual"
+  hostPath:
+    path: /opt/oca-addons
+    type: DirectoryOrCreate

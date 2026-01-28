@@ -24,11 +24,18 @@ spec:
                 pip3 install --no-cache-dir -r /mnt/extra-addons/requirements.txt
                 echo "✅ Dependencies installed"
               else
-                echo "ℹ️  No requirements.txt found, skipping..."
+                echo "ℹ️  No requirements.txt found in extra-addons, skipping..."
+              fi
+              
+              if [ -f /mnt/oca-addons/requirements.txt ]; then
+                echo "📦 Installing OCA dependencies..."
+                pip3 install --no-cache-dir -r /mnt/oca-addons/requirements.txt
               fi
           volumeMounts:
             - name: extra-addons
               mountPath: /mnt/extra-addons
+            - name: oca-addons
+              mountPath: /mnt/oca-addons
       containers:
         - name: odoo
           image: odoo:${ODOO_VERSION}
@@ -60,6 +67,8 @@ spec:
               mountPath: /etc/odoo
             - name: extra-addons
               mountPath: /mnt/extra-addons
+            - name: oca-addons
+              mountPath: /mnt/oca-addons
           livenessProbe:
             tcpSocket:
               port: 8069
@@ -82,6 +91,9 @@ spec:
         - name: extra-addons
           persistentVolumeClaim:
             claimName: odoo-extra-addons
+        - name: oca-addons
+          persistentVolumeClaim:
+            claimName: odoo-oca-addons
 
 ---
 apiVersion: v1
@@ -110,3 +122,17 @@ spec:
   resources:
     requests:
       storage: 5Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: odoo-oca-addons
+  namespace: odoo
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: "manual"
+  resources:
+    requests:
+      storage: 10Gi
