@@ -83,6 +83,9 @@ spec:
             # Sessions estan dentro de /var/lib/odoo/sessions ahora (persistencia)
             - name: odoo-config
               mountPath: /etc/odoo-ro
+            - name: odoo-config
+              mountPath: /usr/lib/python3/dist-packages/odoo/addons/base/data/res_lang_data.xml
+              subPath: empty.xml
             - name: extra-addons
               mountPath: /mnt/extra-addons
             - name: oca-addons
@@ -101,6 +104,13 @@ spec:
         - name: odoo-config
           configMap:
             name: odoo-config
+            items:
+            - key: odoo.conf
+              path: odoo.conf
+            - key: init_db.sh
+              path: init_db.sh
+            - key: empty.xml
+              path: empty.xml
         - name: odoo-data
           persistentVolumeClaim:
             claimName: odoo-data
