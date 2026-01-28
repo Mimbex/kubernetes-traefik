@@ -1,16 +1,16 @@
-# 🚀 Kubernetes + Traefik + Odoo 19
+# 🚀 Kubernetes + Traefik + Odoo (16-19)
 
-**Production-ready Kubernetes deployment with automatic SSL, PostgreSQL 17, and Odoo 19.**
+**Production-ready Kubernetes deployment with automatic SSL, PostgreSQL, and Odoo.**
 
-Deploy a complete Odoo ERP system in ~15 minutes with one command.
+Deploy a complete Odoo ERP system (versions 16.0, 17.0, 18.0, or 19.0) in ~15 minutes with one command.
 
 ---
 
 ## ✨ What You Get
 
 - ✅ **Kubernetes cluster** (production-ready)
-- ✅ **Odoo 19** (latest ERP system)
-- ✅ **PostgreSQL 17** (robust database)
+- ✅ **Odoo** (versions 16.0, 17.0, 18.0, or 19.0 - your choice!)
+- ✅ **PostgreSQL** (version 14, 15, 16, or 17 - configurable)
 - ✅ **Traefik** (automatic SSL with Let's Encrypt)
 - ✅ **Automated daily backups** (7-day retention)
 - ✅ **Visual management tools** (k9s + Kubernetes Dashboard)
@@ -47,6 +47,18 @@ The script will:
 4. Deploy Odoo + PostgreSQL + Traefik
 5. Configure automated backups
 6. Install visual management tools
+
+### 🔄 Want a Different Odoo Version?
+
+By default, this installs **Odoo 19.0** (latest). To use a different version:
+
+**Before installation**, edit `.env`:
+```env
+ODOO_VERSION=18.0      # Options: 19.0, 18.0, 17.0, 16.0
+POSTGRES_VERSION=16    # Options: 17, 16, 15, 14
+```
+
+**After installation**, see [Change Odoo or PostgreSQL Version](#change-odoo-or-postgresql-version) section below.
 
 ---
 
@@ -213,17 +225,42 @@ kubectl get pods -n odoo
 
 ⚠️ **Warning:** This will overwrite your current database!
 
-### Update Odoo Version
+### Change Odoo or PostgreSQL Version
 
-Edit `.env`:
+**Supported Odoo versions:**
+- `19.0` - Latest (Recommended for new deployments)
+- `18.0` - LTS (Long Term Support - Best for production)
+- `17.0` - Community Edition
+- `16.0` - Community Edition
+
+**Supported PostgreSQL versions:**
+- `17` - Latest (Recommended for Odoo 18-19)
+- `16` - Stable (Compatible with all Odoo versions)
+- `15` - Stable (Compatible with all Odoo versions)
+- `14` - Stable (Compatible with Odoo 16-17)
+
+**To change versions:**
+
+1. Edit `.env`:
 ```env
-ODOO_VERSION=19.0  # Change to desired version
+ODOO_VERSION=18.0      # Change to desired Odoo version
+POSTGRES_VERSION=16    # Change to desired PostgreSQL version
 ```
 
-Then reload:
+2. Reload configuration:
 ```bash
 ./reload-config.sh
 ```
+
+**Version Compatibility Matrix:**
+| Odoo Version | Recommended PostgreSQL | Minimum PostgreSQL |
+|--------------|------------------------|-------------------|
+| 19.0         | 17                     | 14                |
+| 18.0         | 16 or 17               | 14                |
+| 17.0         | 15 or 16               | 12                |
+| 16.0         | 14 or 15               | 12                |
+
+⚠️ **Note:** Changing versions requires redeployment. Backup your data first!
 
 ---
 
@@ -387,12 +424,12 @@ kubernetes-traefik/
 ```env
 # Odoo Configuration
 ODOO_DOMAIN=odoo.yourdomain.com
-ODOO_VERSION=19.0                    # Options: 19.0, 18.0, 17.0
+ODOO_VERSION=19.0                    # Options: 19.0, 18.0, 17.0, 16.0
 ODOO_REPLICAS=1                      # Number of Odoo pods
 ODOO_ADMIN_PASSWD=master_password    # Odoo master password
 
 # PostgreSQL Configuration
-POSTGRES_VERSION=17
+POSTGRES_VERSION=17                  # Options: 17, 16, 15, 14
 POSTGRES_USER=odoo
 POSTGRES_PASSWORD=secure_password
 POSTGRES_DB=postgres
