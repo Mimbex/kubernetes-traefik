@@ -10,5 +10,5 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
   hostPath:
-    path: /srv/odoo-data/traefik
+    path: /var/lib/odoo-storage/traefik
     type: DirectoryOrCreate

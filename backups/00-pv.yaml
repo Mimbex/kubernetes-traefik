@@ -10,5 +10,5 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: "manual"
   hostPath:
-    path: /srv/odoo-data/backups
+    path: /var/lib/odoo-storage/backups
     type: DirectoryOrCreate

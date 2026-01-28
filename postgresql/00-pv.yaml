@@ -10,5 +10,5 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: "manual"
   hostPath:
-    path: /srv/odoo-data/postgres
+    path: /var/lib/odoo-storage/postgres
     type: DirectoryOrCreate
