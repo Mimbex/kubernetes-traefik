@@ -9,7 +9,7 @@ data:
     # ============================================
     # Database Configuration
     # ============================================
-    admin_passwd = admin
+    admin_passwd = odoo_super_admin
     db_host = postgresql.postgresql.svc.cluster.local
     db_port = 5432
     db_user = ${POSTGRES_USER}

@@ -32,6 +32,7 @@ echo "📤 Subiendo ConfigMap a Kubernetes..."
 kubectl create configmap odoo-config \
     --from-file=odoo.conf=odoo/odoo.conf.tmp \
     --from-file=init_db.sh=odoo/init_db.sh \
+    --from-file=empty.xml=odoo/empty.xml \
     -n odoo --dry-run=client -o yaml | kubectl apply -f -
 
 # Limpieza
