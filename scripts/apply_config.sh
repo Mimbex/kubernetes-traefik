@@ -15,9 +15,9 @@ set -a
 source .env
 set +a
 
-# Procesar odoo.conf con envsubst y crear ConfigMap
-# Creamos un archivo temporal procesado
-envsubst < odoo/odoo.conf > odoo/odoo.conf.tmp
+# Procesar odoo.conf con envsubst (limitado a variables conocidas para no romper hashes)
+export VARS='$POSTGRES_USER $POSTGRES_PASSWORD'
+envsubst "$VARS" < odoo/odoo.conf > odoo/odoo.conf.tmp
 
 # Verificamos que no quedó vacío
 if [ ! -s odoo/odoo.conf.tmp ]; then
