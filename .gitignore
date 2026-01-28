@@ -1,0 +1,7 @@
+.env
+.DS_Store
+*.exp
+check_*.sh
+fix_*.sh
+tmp/
+*.log
