@@ -1,278 +1,89 @@
 #!/bin/bash
 
-# ============================================
-# Odoo CLI - Production-Grade Management Tool
-# ============================================
-# Professional CLI for Odoo on Kubernetes
-# Usage: odooctl <command> [options]
-
-set -e
-
-VERSION="1.0.0"
-
-# Colors
+# Colores
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 RED='\033[0;31m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
 NC='\033[0m'
 
-# Script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-show_version() {
-    echo "odooctl version $VERSION"
-}
-
-show_help() {
-    cat << EOF
-${BOLD}Odoo CLI - Production-Grade Management Tool${NC}
-
-${YELLOW}USAGE:${NC}
-    odooctl <command> [options]
-
-${YELLOW}COMMANDS:${NC}
-
-  ${CYAN}Cluster Management:${NC}
-    deploy              Deploy Odoo stack to Kubernetes
-    delete              Delete Odoo deployment
-    restart             Restart Odoo pods
-    scale <replicas>    Scale Odoo deployment
-    
-  ${CYAN}Monitoring & Logs:${NC}
-    status              Show cluster status
-    logs [--follow]     View Odoo logs
-    describe            Describe Odoo resources
-    top                 Show resource usage
-    
-  ${CYAN}Module Management:${NC}
-    module install <path|url>    Install custom module
-    module list                  List installed modules
-    module update                Update apps list in Odoo
-    
-  ${CYAN}Database Operations:${NC}
-    db backup                    Create database backup
-    db restore <file>            Restore from backup
-    db list                      List available backups
-    
-  ${CYAN}Configuration:${NC}
-    config view                  View current configuration
-    config edit                  Edit odoo.conf
-    config reload                Reload configuration
-    
-  ${CYAN}Development:${NC}
-    shell                        Access Odoo pod shell
-    exec <command>               Execute command in pod
-    port-forward [port]          Forward ports for local access
-    
-  ${CYAN}Docker Image:${NC}
-    build [version]              Build custom Docker image
-    push [registry]              Push image to registry
-    
-  ${CYAN}Utilities:${NC}
-    version                      Show CLI version
-    help                         Show this help message
-
-${YELLOW}EXAMPLES:${NC}
-    odooctl deploy                           # Deploy Odoo
-    odooctl restart                          # Restart Odoo
-    odooctl logs --follow                    # Follow logs
-    odooctl module install /path/to/module   # Install module
-    odooctl db backup                        # Backup database
-    odooctl scale 3                          # Scale to 3 replicas
-    odooctl shell                            # Access pod shell
-    odooctl port-forward 8069                # Forward port 8069
-
-${YELLOW}GLOBAL OPTIONS:${NC}
-    -h, --help          Show help
-    -v, --version       Show version
-    -n, --namespace     Kubernetes namespace (default: odoo)
-
-For more information, visit: https://github.com/Mimbex/kubernetes-traefik
-EOF
-}
-
-# Parse global options
 NAMESPACE="odoo"
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        -v|--version)
-            show_version
-            exit 0
-            ;;
-        -h|--help)
-            show_help
-            exit 0
-            ;;
-        -n|--namespace)
-            NAMESPACE="$2"
-            shift 2
-            ;;
-        *)
-            break
-            ;;
-    esac
-done
+DEPLOYMENT="odoo"
 
-# Get command
-COMMAND=${1:-"help"}
-shift || true
+function get_pod() {
+    kubectl get pod -n $NAMESPACE -l app=odoo -o jsonpath="{.items[0].metadata.name}"
+}
 
-# Execute command
-case $COMMAND in
-    deploy)
-        echo -e "${BLUE}🚀 Deploying Odoo stack...${NC}"
-        $SCRIPT_DIR/scripts/deploy-all.sh
-        ;;
-    
-    delete)
-        echo -e "${YELLOW}⚠️  This will delete the Odoo deployment${NC}"
-        read -p "Are you sure? (yes/no): " confirm
-        if [ "$confirm" = "yes" ]; then
-            $SCRIPT_DIR/scripts/delete-all.sh
+function show_help() {
+    echo -e "${BLUE}Odoo Control Tool (odooctl)${NC}"
+    echo "Uso: ./odooctl [comando]"
+    echo ""
+    echo "Comandos:"
+    echo -e "  ${GREEN}logs${NC} [-f]       Ver logs (añade -f para ver en tiempo real)"
+    echo -e "  ${GREEN}restart${NC}        Reiniciar Odoo suavemente"
+    echo -e "  ${GREEN}shell${NC}          Entrar a la terminal del contenedor"
+    echo -e "  ${GREEN}update <mod>${NC}   Actualizar un módulo específico (ej: sale,account)"
+    echo -e "  ${GREEN}status${NC}         Ver estado de los pods"
+    echo -e "  ${GREEN}psql${NC}           Entrar a la base de datos (Postgres console)"
+    echo -e "  ${GREEN}oca-install${NC}    Descargar repositorios comunes de OCA"
+    echo ""
+}
+
+case "$1" in
+    logs)
+        POD=$(get_pod)
+        echo -e "${BLUE}📜 Mostrando logs de $POD...${NC}"
+        if [ "$2" == "-f" ]; then
+            kubectl logs -f $POD -n $NAMESPACE
         else
-            echo "Cancelled"
+            kubectl logs $POD -n $NAMESPACE
         fi
         ;;
-    
     restart)
-        $SCRIPT_DIR/scripts/odoo-restart.sh
+        echo -e "${BLUE}🔄 Reiniciando Odoo...${NC}"
+        kubectl rollout restart deployment $DEPLOYMENT -n $NAMESPACE
+        echo -e "${GREEN}✅ Reinicio solicitado. Usa './odooctl status' para ver progreso.${NC}"
         ;;
-    
-    scale)
-        REPLICAS=${1:-1}
-        echo -e "${BLUE}📊 Scaling Odoo to $REPLICAS replicas...${NC}"
-        kubectl scale deployment odoo -n $NAMESPACE --replicas=$REPLICAS
-        kubectl rollout status deployment odoo -n $NAMESPACE
-        ;;
-    
-    status)
-        $SCRIPT_DIR/scripts/odoo-status.sh
-        ;;
-    
-    logs)
-        $SCRIPT_DIR/scripts/odoo-logs.sh "$@"
-        ;;
-    
-    describe)
-        echo -e "${BLUE}📋 Odoo Deployment Details:${NC}"
-        kubectl describe deployment odoo -n $NAMESPACE
-        ;;
-    
-    top)
-        echo -e "${BLUE}📈 Resource Usage:${NC}"
-        kubectl top pods -n $NAMESPACE
-        ;;
-    
-    module)
-        SUBCOMMAND=${1:-"help"}
-        shift || true
-        case $SUBCOMMAND in
-            install)
-                $SCRIPT_DIR/scripts/odoo-install-module.sh "$@"
-                ;;
-            list)
-                echo -e "${BLUE}📦 Installed Modules:${NC}"
-                POD=$(kubectl get pod -n $NAMESPACE -l app=odoo -o jsonpath='{.items[0].metadata.name}')
-                kubectl exec -n $NAMESPACE $POD -- ls -la /mnt/extra-addons/
-                ;;
-            update)
-                echo -e "${BLUE}🔄 Updating apps list...${NC}"
-                echo "Go to Odoo → Apps → Update Apps List"
-                ;;
-            *)
-                echo "Usage: odooctl module <install|list|update>"
-                ;;
-        esac
-        ;;
-    
-    db)
-        SUBCOMMAND=${1:-"help"}
-        shift || true
-        case $SUBCOMMAND in
-            backup)
-                $SCRIPT_DIR/scripts/backup-now.sh
-                ;;
-            restore)
-                $SCRIPT_DIR/scripts/restore-backup.sh "$@"
-                ;;
-            list)
-                $SCRIPT_DIR/scripts/list-backups.sh
-                ;;
-            *)
-                echo "Usage: odooctl db <backup|restore|list>"
-                ;;
-        esac
-        ;;
-    
-    config)
-        SUBCOMMAND=${1:-"view"}
-        shift || true
-        case $SUBCOMMAND in
-            view)
-                echo -e "${BLUE}📄 Current Configuration:${NC}"
-                kubectl get configmap odoo-config -n $NAMESPACE -o yaml
-                ;;
-            edit)
-                kubectl edit configmap odoo-config -n $NAMESPACE
-                ;;
-            reload)
-                $SCRIPT_DIR/reload-config.sh
-                ;;
-            *)
-                echo "Usage: odooctl config <view|edit|reload>"
-                ;;
-        esac
-        ;;
-    
     shell)
-        $SCRIPT_DIR/scripts/odoo-shell.sh
+        POD=$(get_pod)
+        echo -e "${BLUE}🐚 Entrando a $POD...${NC}"
+        kubectl exec -it $POD -n $NAMESPACE -- /bin/bash
         ;;
-    
-    exec)
-        POD=$(kubectl get pod -n $NAMESPACE -l app=odoo -o jsonpath='{.items[0].metadata.name}')
-        kubectl exec -it -n $NAMESPACE $POD -- "$@"
+    status)
+        echo -e "${BLUE}📊 Estado del Cluster:${NC}"
+        kubectl get pods -n $NAMESPACE
+        kubectl get modules -A 2>/dev/null || true # Si tienes metricas
         ;;
-    
-    port-forward)
-        PORT=${1:-8069}
-        echo -e "${BLUE}🔌 Forwarding port $PORT...${NC}"
-        echo "Access Odoo at: http://localhost:$PORT"
-        kubectl port-forward -n $NAMESPACE svc/odoo $PORT:8069
-        ;;
-    
-    build)
-        cd $SCRIPT_DIR/odoo
-        ./build-custom-image.sh "$@"
-        ;;
-    
-    push)
-        REGISTRY=${1:-""}
-        if [ -z "$REGISTRY" ]; then
-            echo -e "${RED}❌ Registry required${NC}"
-            echo "Usage: odooctl push <registry>"
+    update)
+        if [ -z "$2" ]; then
+            echo -e "${RED}Error: Debes especificar el módulo a actualizar.${NC}"
+            echo "Ejemplo: ./odooctl update account"
             exit 1
         fi
-        VERSION=${2:-"19.0"}
-        echo -e "${BLUE}📤 Pushing to $REGISTRY...${NC}"
-        docker tag custom-odoo:$VERSION $REGISTRY/custom-odoo:$VERSION
-        docker push $REGISTRY/custom-odoo:$VERSION
+        POD=$(get_pod)
+        echo -e "${BLUE}🚀 Actualizando módulo: $2...${NC}"
+        # Truco: Ejecutamos el comando de actualización en un proceso paralelo dentro del pod o reiniciamos con flag
+        # En K8s prod, lo mejor es entrar y ejecutar, o usar un Job.
+        # Para hacerlo facil: Entramos y corremos odoo-bin shell no es ideal.
+        # La forma Correcta PRO: Editar el despliegue para forzar update o reiniciar.
+        # Pero eso es lento.
+        # Comandos directos:
+        kubectl exec -it $POD -n $NAMESPACE -- odoo -u $2 --stop-after-init
         ;;
-    
-    version)
-        show_version
+    psql)
+        # Buscar pod de postgres
+        PG_POD=$(kubectl get pod -n postgresql -l app=postgresql -o jsonpath="{.items[0].metadata.name}")
+        echo -e "${BLUE}🐘 Entrando a Postgres ($PG_POD)...${NC}"
+        kubectl exec -it $PG_POD -n postgresql -- psql -U odoo -d postgres
         ;;
-    
-    help|--help|-h)
-        show_help
+    oca-install)
+        # Ejecutar script helper si existe
+        if [ -f "./scripts/install_oca.sh" ]; then
+            ./scripts/install_oca.sh
+        else
+            echo "Script install_oca.sh no encontrado."
+        fi
         ;;
-    
     *)
-        echo -e "${RED}❌ Unknown command: $COMMAND${NC}"
-        echo ""
-        echo "Run 'odooctl help' for usage information"
-        exit 1
+        show_help
         ;;
 esac
