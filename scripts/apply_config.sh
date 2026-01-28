@@ -1,43 +1,41 @@
 #!/bin/bash
-# Script para aplicar cambios en odoo/odoo.conf al cluster
-# Uso: ./scripts/apply_config.sh
-
-echo "⚙️  Procesando configuración de Odoo..."
-
-# Verificar .env
-if [ ! -f .env ]; then
-    echo "❌ Error: Archivo .env no encontrado."
-    exit 1
-fi
-
-# Cargar variables para sustitución
 set -a
 source .env
 set +a
 
-# Procesar odoo.conf con envsubst (limitado a variables conocidas para no romper hashes)
-export VARS='$POSTGRES_USER $POSTGRES_PASSWORD'
-envsubst "$VARS" < odoo/odoo.conf > odoo/odoo.conf.tmp
+# Validar variables críticas
+if [ -z "$HOST" ]; then
+    echo "❌ Error: Variable HOST no definida en .env"
+    exit 1
+fi
 
-# Verificamos que no quedó vacío
+echo "⚙️  Procesando configuración de Odoo..."
+
+# Sustituir variables en odoo.conf
+# OJO: Solo sustituimos las variables que queremos (HOST, PORT, USER, PASSWORD)
+# Si envsubst no recibe argumentos, sustituye TODAS.
+# Mejor definimos cuáles exportar.
+export HOST PORT USER PASSWORD
+
+envsubst < odoo/odoo.conf > odoo/odoo.conf.tmp
+
 if [ ! -s odoo/odoo.conf.tmp ]; then
-    echo "❌ Error: El archivo de configuración procesado está vacío. Revisa tus variables."
+    echo "❌ Error: odoo.conf.tmp está vacío tras envsubst"
     rm odoo/odoo.conf.tmp
     exit 1
 fi
 
 echo "📤 Subiendo ConfigMap a Kubernetes..."
-# Crear ConfigMap con ambios archivos
+# Crear ConfigMap con ambos archivos:
+# 1. odoo.conf (PROCESADO)
+# 2. init_db.sh (CRUDO, ya que es user script y usa variables $ dentro)
 kubectl create configmap odoo-config \
-    --from-file=odoo.conf=odoo/odoo.conf \
+    --from-file=odoo.conf=odoo/odoo.conf.tmp \
     --from-file=init_db.sh=odoo/init_db.sh \
     -n odoo --dry-run=client -o yaml | kubectl apply -f -
 
 # Limpieza
 rm odoo/odoo.conf.tmp
-
-echo "🔄 Reiniciando Odoo para aplicar cambios..."
-kubectl rollout restart deployment odoo -n odoo
 
 echo "✅ Configuración aplicada correctamente."
 echo "   Usa './odooctl logs -f' para verificar el arranque."
