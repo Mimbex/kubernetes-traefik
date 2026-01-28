@@ -28,10 +28,12 @@ spec:
               fi
               
               # COPIAR CONFIGURACION A VOLUMEN PERSISTENTE (Para que Odoo pueda escribir el hash)
-              echo "⚙️  Setting up writable configuration..."
               cp /etc/odoo-ro/odoo.conf /var/lib/odoo/odoo.conf
-              chown -R 101:101 /var/lib/odoo  # 101 es el UID de odoo
+              echo "Fixing permissions..."
+              chown -R 101:101 /var/lib/odoo
               chmod 640 /var/lib/odoo/odoo.conf
+              # chmod 777 /var/lib/odoo/sessions # Ya no es necesario si quitamos el emptyDir y hacemos chown recursivo
+              echo "Permissions fixed."
               
               if [ -f /mnt/oca-addons/requirements.txt ]; then
                 echo "📦 Installing OCA dependencies..."
@@ -72,8 +74,8 @@ spec:
           volumeMounts:
             - name: odoo-data
               mountPath: /var/lib/odoo
-            - name: odoo-sessions
-              mountPath: /var/lib/odoo/sessions
+            # - name: odoo-sessions # ELIMINADO PARA USAR PERSISTENCIA
+            #   mountPath: /var/lib/odoo/sessions
             - name: odoo-config
               mountPath: /etc/odoo-ro
             - name: extra-addons
@@ -97,8 +99,8 @@ spec:
         - name: odoo-data
           persistentVolumeClaim:
             claimName: odoo-data
-        - name: odoo-sessions
-          emptyDir: {}
+        # - name: odoo-sessions # ELIMINADO
+        #   emptyDir: {}
         - name: extra-addons
           persistentVolumeClaim:
             claimName: odoo-extra-addons
